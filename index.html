@@ -1,0 +1,696 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QikGLASS Scoring Head</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+body{margin:0}
+:root{
+  --bg:#F2F5F4; --surface:#FFFFFF; --sunk:#E8EEEC; --ink:#15201E; --muted:#56655F; --line:#D3DDDA;
+  --accent:#0E7C74; --accent-ink:#FFFFFF; --amber:#B86E00; --cobalt:#2F4FB0; --warn:#B0501A; --warn-bg:#FBEDE3; --ok:#2F7D3A;
+  --grid:#E3EAE8; --sheet:#DCEBE8;
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body:"Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0F1615; --surface:#162120; --sunk:#1C2927; --ink:#E3ECEA; --muted:#94A6A1; --line:#2A3A37;
+    --accent:#43B8AC; --accent-ink:#06201D; --amber:#F0A63F; --cobalt:#8BA4F2; --warn:#F2915A; --warn-bg:#35211A; --ok:#7CC98A;
+    --grid:#1E2B29; --sheet:#1D3431;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0F1615; --surface:#162120; --sunk:#1C2927; --ink:#E3ECEA; --muted:#94A6A1; --line:#2A3A37;
+  --accent:#43B8AC; --accent-ink:#06201D; --amber:#F0A63F; --cobalt:#8BA4F2; --warn:#F2915A; --warn-bg:#35211A; --ok:#7CC98A;
+  --grid:#1E2B29; --sheet:#1D3431;
+}
+*{box-sizing:border-box}
+body{background:var(--bg); color:var(--ink); font:16px/1.5 var(--body); padding-inline:16px; padding-block:0 48px}
+.wrap{max-width:1180px; margin:0 auto}
+header{display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:12px 24px; padding-block:28px 18px; border-bottom:1px solid var(--line)}
+h1{font:700 clamp(28px,4vw,40px)/1.05 var(--display); letter-spacing:-.01em; margin:0}
+h1 span{color:var(--accent)}
+.spec{font:13px/1.4 var(--mono); color:var(--muted); margin:6px 0 0}
+nav{display:flex; gap:4px; flex-wrap:wrap}
+nav button{font:600 15px var(--body); background:none; border:1px solid transparent; color:var(--muted); padding:8px 14px; border-radius:6px; cursor:pointer}
+nav button[aria-selected="true"]{background:var(--surface); border-color:var(--line); color:var(--ink)}
+nav button:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+h2{font:700 24px/1.2 var(--display); margin:0; text-wrap:balance}
+h3{font:600 17px/1.3 var(--display); margin:0}
+p{margin:0}
+.muted{color:var(--muted)}
+section.tab{padding-top:24px}
+
+/* G-code tool */
+.tool{display:grid; grid-template-columns:330px 1fr; gap:20px; align-items:start}
+@media (max-width:880px){ .tool{grid-template-columns:1fr} }
+.panel{background:var(--surface); border:1px solid var(--line); border-radius:8px}
+.controls{padding:16px; display:flex; flex-direction:column; gap:18px}
+.load{display:flex; flex-direction:column; gap:8px}
+.drop{border:1.5px dashed var(--line); border-radius:6px; padding:14px; text-align:center; color:var(--muted); font-size:14px}
+.drop.over{border-color:var(--accent); color:var(--ink)}
+.drop label{color:var(--accent); font-weight:600; cursor:pointer; text-decoration:underline}
+.filename{font:13px var(--mono); color:var(--muted); overflow-wrap:anywhere}
+fieldset{border:0; margin:0; padding:0; display:flex; flex-direction:column; gap:8px}
+legend{font:600 12px var(--body); text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin-bottom:6px; padding:0}
+.row{display:grid; grid-template-columns:1fr 104px; align-items:center; gap:10px}
+.row label{font-size:15px}
+.row small{display:block; color:var(--muted); font-size:12.5px; line-height:1.3}
+.unit{position:relative}
+.unit input, .row select{width:100%; font:14px var(--mono); padding:6px 34px 6px 8px; border:1px solid var(--line); border-radius:5px; background:var(--bg); color:var(--ink); font-variant-numeric:tabular-nums}
+.row select{padding-right:6px; font-family:var(--body)}
+.unit span{position:absolute; right:8px; top:50%; transform:translateY(-50%); font:12px var(--mono); color:var(--muted); pointer-events:none}
+.btn{font:600 14px var(--body); border-radius:6px; padding:8px 14px; cursor:pointer; border:1px solid var(--line); background:var(--surface); color:var(--ink)}
+.btn.primary{background:var(--accent); color:var(--accent-ink); border-color:var(--accent)}
+.btn:disabled{opacity:.5; cursor:not-allowed}
+.right{display:flex; flex-direction:column; gap:16px; min-width:0}
+.stats{display:flex; flex-wrap:wrap; gap:8px 28px; padding:14px 16px; border-bottom:1px solid var(--line)}
+.stat b{display:block; font:600 20px var(--mono); font-variant-numeric:tabular-nums}
+.stat span{font-size:12px; text-transform:uppercase; letter-spacing:.07em; color:var(--muted)}
+.canvasbox{padding:12px}
+canvas{display:block; width:100%; height:auto; border-radius:4px; background:var(--sunk)}
+.legend{display:flex; flex-wrap:wrap; gap:6px 18px; padding:0 16px 14px; font-size:13px; color:var(--muted)}
+.legend i{display:inline-block; width:18px; height:0; border-top:2.5px solid; vertical-align:middle; margin-right:6px}
+.warns{display:flex; flex-direction:column; gap:6px}
+.warn{background:var(--warn-bg); color:var(--warn); border-radius:6px; padding:8px 12px; font-size:14px}
+.okmsg{color:var(--ok); font-size:14px}
+.codehead{display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; padding:12px 16px; border-bottom:1px solid var(--line)}
+.codehead .btns{display:flex; gap:8px; flex-wrap:wrap}
+textarea{display:block; width:100%; height:240px; border:0; border-radius:0 0 8px 8px; background:var(--surface); color:var(--ink); font:12.5px/1.5 var(--mono); padding:12px 16px; resize:vertical}
+.status{font-size:13px; color:var(--muted); min-height:1.2em}
+
+/* Guides */
+.guide{display:grid; grid-template-columns:minmax(0,1fr) 320px; gap:32px; align-items:start}
+@media (max-width:880px){ .guide{grid-template-columns:1fr} }
+.prose{display:flex; flex-direction:column; gap:28px; max-width:70ch}
+.block{display:flex; flex-direction:column; gap:10px}
+.prose ol, .prose ul{margin:0; padding-left:22px; display:flex; flex-direction:column; gap:7px}
+.aside{position:sticky; top:16px; display:flex; flex-direction:column; gap:12px}
+.aside img{border-radius:8px; border:1px solid var(--line); background:#fff}
+.aside figcaption{font-size:13px; color:var(--muted)}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse; width:100%; font-size:15px}
+th,td{text-align:left; padding:7px 10px 7px 0; border-bottom:1px solid var(--line); vertical-align:top}
+th{font:600 12px var(--body); text-transform:uppercase; letter-spacing:.07em; color:var(--muted)}
+td.q{font-family:var(--mono); white-space:nowrap; font-variant-numeric:tabular-nums}
+code{font:13.5px var(--mono); background:var(--sunk); padding:1px 5px; border-radius:4px}
+.callout{border-left:3px solid var(--amber); padding:8px 0 8px 14px; color:var(--ink)}
+.callout b{color:var(--amber)}
+.measure{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px}
+.measure div{background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:12px 14px}
+.measure code{font-size:13px}
+@media (prefers-reduced-motion: reduce){ *{transition:none!important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div>
+    <h1>Qik<span>GLASS</span> scoring head</h1>
+    <p class="spec">3018-PRO · GRBL · QWORK carbide wheel · swivel caster 1.5 mm</p>
+  </div>
+  <nav role="tablist" aria-label="Sections">
+    <button role="tab" id="t-gcode" aria-selected="true" data-tab="gcode">Pattern → G-code</button>
+    <button role="tab" id="t-build" aria-selected="false" data-tab="build">Build the head</button>
+    <button role="tab" id="t-run" aria-selected="false" data-tab="run">Calibrate &amp; score</button>
+  </nav>
+</header>
+
+<!-- ============ G-CODE ============ -->
+<section class="tab" id="tab-gcode">
+  <div class="tool">
+    <div class="panel controls">
+      <div class="load">
+        <h3>Score lines</h3>
+        <div class="drop" id="drop">Drop an SVG here or <label for="file">choose a file</label>
+          <input type="file" id="file" accept=".svg,image/svg+xml" hidden>
+        </div>
+        <div class="filename" id="fname">Sample: 200 × 150 mm sheet, 4 scores</div>
+        <button class="btn" id="sampleBtn" type="button">Reload sample</button>
+      </div>
+
+      <fieldset>
+        <legend>Pressure &amp; height</legend>
+        <div class="row"><label for="depth">Score depth<small>From your scale test, below Z0</small></label><div class="unit"><input id="depth" type="number" step="0.05" value="1.5"><span>mm</span></div></div>
+        <div class="row"><label for="travel">Travel height<small>Above glass</small></label><div class="unit"><input id="travel" type="number" step="0.5" value="3"><span>mm</span></div></div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Speeds</legend>
+        <div class="row"><label for="feed">Score feed</label><div class="unit"><input id="feed" type="number" step="50" value="1200"><span>/min</span></div></div>
+        <div class="row"><label for="plunge">Touch-down feed</label><div class="unit"><input id="plunge" type="number" step="10" value="150"><span>/min</span></div></div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Swivel wheel</legend>
+        <div class="row"><label for="caster">Caster offset<small>Match <code>caster</code> in the CAD file</small></label><div class="unit"><input id="caster" type="number" step="0.1" value="1.5"><span>mm</span></div></div>
+        <div class="row"><label for="align">Pre-align wheel<small>Short stroke on a scrap pad before each score</small></label><select id="align"><option value="pad" selected>On pad</option><option value="none">Off</option></select></div>
+        <div class="row"><label for="padx">Pad X</label><div class="unit"><input id="padx" type="number" step="1" value="225"><span>mm</span></div></div>
+        <div class="row"><label for="pady">Pad Y</label><div class="unit"><input id="pady" type="number" step="1" value="20"><span>mm</span></div></div>
+        <div class="row"><label for="stroke">Pad stroke</label><div class="unit"><input id="stroke" type="number" step="1" value="8"><span>mm</span></div></div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Start &amp; finish</legend>
+        <div class="row"><label for="inset">Start inset<small>Touch down this far inside the edge</small></label><div class="unit"><input id="inset" type="number" step="0.5" value="1"><span>mm</span></div></div>
+        <div class="row"><label for="leadout">Run-out<small>Extend past the end</small></label><div class="unit"><input id="leadout" type="number" step="0.5" value="0"><span>mm</span></div></div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Output</legend>
+        <div class="row"><label for="origin">Work zero (X0 Y0)<small>Front-left corner of…</small></label><select id="origin"><option value="sheet" selected>Sheet corner</option><option value="drawing">Drawing corner</option></select></div>
+        <div class="row"><label for="scale">Scale</label><div class="unit"><input id="scale" type="number" step="1" value="100"><span>%</span></div></div>
+        <div class="row"><label for="oil">Pause to re-oil<small>Every N scores (M0); 0 = off</small></label><div class="unit"><input id="oil" type="number" step="1" min="0" value="0"><span>#</span></div></div>
+      </fieldset>
+    </div>
+
+    <div class="right">
+      <div class="panel">
+        <div class="stats" id="stats"></div>
+        <div class="canvasbox"><canvas id="cv" width="800" height="560" aria-label="Preview of score paths"></canvas></div>
+        <div class="legend">
+          <span><i style="border-color:var(--accent)"></i>Wheel path (the score)</span>
+          <span><i style="border-color:var(--cobalt); border-top-style:dashed"></i>Pivot path (what the machine moves)</span>
+          <span><i style="border-color:var(--amber)"></i>Start point and score number</span>
+        </div>
+      </div>
+      <div class="warns" id="warns"></div>
+      <div class="panel">
+        <div class="codehead">
+          <h3>G-code</h3>
+          <div class="btns">
+            <button class="btn" id="copyBtn" type="button">Copy</button>
+            <button class="btn primary" id="saveBtn" type="button" hidden>Save file</button>
+          </div>
+        </div>
+        <textarea id="gcode" readonly spellcheck="false" aria-label="Generated G-code"></textarea>
+      </div>
+      <p class="status" id="status">Saves as .txt. If your offline controller doesn't list it, rename to .nc.</p>
+    </div>
+  </div>
+  <div id="svgHost" style="position:absolute; left:-10000px; top:0; width:10px; height:10px; overflow:hidden; visibility:hidden" aria-hidden="true"></div>
+</section>
+
+<!-- ============ BUILD ============ -->
+<section class="tab" id="tab-build" hidden>
+  <div class="guide">
+    <div class="prose">
+      <div class="block">
+        <h2>How the head works</h2>
+        <p>The printed body drops into the spindle clamp where the 775 motor sits. An 8 mm steel shaft runs through two LM8UU linear bearings, so it can slide up and down and spin freely. A compression spring under the body pushes the shaft down. That spring, not the Z motor, sets the scoring pressure, so small differences in bed or glass height barely change the force.</p>
+        <p>The QWORK cutter head is unscrewed from its handle and clamped into the carrier at the bottom of the shaft, 1.5 mm off-centre. The wheel trails behind the pivot like a shopping-cart caster and steers itself around curves. The G-code generator shifts every path by that offset so the wheel lands on your line.</p>
+      </div>
+
+      <div class="block">
+        <h2>Measure two things first</h2>
+        <p>I couldn't confirm either size from the product listings. Measure both with calipers, enter them at the top of <code>qikglass_scoring_head.scad</code>, then export the STLs from free OpenSCAD. The included STLs use the defaults shown.</p>
+        <div class="measure">
+          <div><h3>Clamp bore</h3><p class="muted">Take the spindle out and measure the motor body where the clamp grips it. A bare 775 is about 42 mm. If the clamp grips the steel flux ring, it's about 45.5 mm.</p><p><code>clamp_d = 42.0</code></p></div>
+          <div><h3>Cutter-head shank</h3><p class="muted">Loosen the small screw on the handle (the kit's screwdriver fits), pull a head out, and measure the round part that sat inside the handle.</p><p><code>head_shank_d = 7.0</code></p></div>
+        </div>
+      </div>
+
+      <div class="block">
+        <h2>Parts list</h2>
+        <div class="tablewrap"><table>
+          <thead><tr><th>Qty</th><th>Part</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td class="q">2</td><td>LM8UU linear bearing</td><td>15 mm OD × 24 mm, for an 8 mm shaft</td></tr>
+            <tr><td class="q">1</td><td>8 mm hardened steel rod, 100 mm</td><td>Linear rod or a cut 3D-printer rod</td></tr>
+            <tr><td class="q">1</td><td>8 mm shaft collar with set screw</td><td>Stops the shaft and sets spring preload</td></tr>
+            <tr><td class="q">1</td><td>Compression spring</td><td>ID 9 mm or more, OD 13 mm or less, free length 25–30 mm, wire 1.0–1.2 mm. An assortment box lets you tune.</td></tr>
+            <tr><td class="q">3</td><td>M3 × 8 countersunk screw</td><td>Cap to body</td></tr>
+            <tr><td class="q">2</td><td>M3 × 10 socket screw</td><td>Carrier clamps (self-tap into the plastic)</td></tr>
+            <tr><td class="q">1</td><td>QWORK cutter head</td><td>The 2–6 mm head for 3 mm stained glass</td></tr>
+            <tr><td class="q">1</td><td>MDF board + 2–3 mm felt or cork</td><td>Flat, slightly soft bed under the glass</td></tr>
+            <tr><td class="q">1</td><td>Kitchen scale</td><td>For setting pressure</td></tr>
+            <tr><td class="q">—</td><td>Glass cutting oil</td><td>The head alone has no reservoir</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+
+      <div class="block">
+        <h2>Print settings</h2>
+        <div class="tablewrap"><table>
+          <thead><tr><th>Part</th><th>Orientation</th><th>File</th></tr></thead>
+          <tbody>
+            <tr><td>Body</td><td>Upright, bearing bore opening up</td><td><code>qikglass_body.stl</code></td></tr>
+            <tr><td>Cap</td><td>Flat, countersinks up</td><td><code>qikglass_cap.stl</code></td></tr>
+            <tr><td>Carrier</td><td>Head pocket down on the bed</td><td><code>qikglass_carrier.stl</code></td></tr>
+            <tr><td>Glass corner fence (×2)</td><td>Flat</td><td><code>qikglass_fence.stl</code></td></tr>
+          </tbody>
+        </table></div>
+        <p class="muted">PETG or PLA+, 0.2 mm layers, 4 walls, 40% infill. If the bearings are loose or won't press in, change <code>lm_fit</code> by 0.05 mm and reprint the body.</p>
+      </div>
+
+      <div class="block">
+        <h2>Assembly</h2>
+        <ol>
+          <li>Press both LM8UU bearings into the body from the top until they sit on the bottom lip.</li>
+          <li>Screw the cap onto the body with the three countersunk screws. The cap holds the bearings in and its flange rests on top of the spindle clamp.</li>
+          <li>Slide the shaft collar onto the shaft, then push the shaft down through the cap and both bearings.</li>
+          <li>From below, slide the spring over the shaft, then push the carrier on until the shaft bottoms in its socket. Tighten the side screw.</li>
+          <li>Pull the shaft down to compress the spring a few millimetres, then lock the collar against the cap. That sets the preload. More preload gives a steadier force.</li>
+          <li>Push the cutter head into the carrier's bottom pocket. Turn it so the wheel's plane lines up with the two grooves on the carrier's sides, then tighten the screw. If the wheel is turned sideways, it won't steer.</li>
+          <li>Spin the shaft by hand. It should turn freely and spring back when you push it up.</li>
+        </ol>
+      </div>
+
+      <div class="block">
+        <h2>Swapping spindle ⇄ glass head</h2>
+        <ol>
+          <li>Power down and unplug the spindle lead at the board.</li>
+          <li>Loosen the clamp, lift the spindle out, drop the head in until the cap flange rests on the clamp, and tighten.</li>
+          <li>Re-zero Z on the glass every time (see <em>Calibrate &amp; score</em>).</li>
+          <li>Going back: reverse this, plug the spindle in, and re-zero Z with a bit.</li>
+        </ol>
+        <p class="callout"><b>Never run a milling file with the glass head fitted.</b> Router files dive several millimetres deep and will crush the spring and break glass. Keep glass files in their own folder on the SD card.</p>
+      </div>
+    </div>
+
+    <figure class="aside" style="margin:0">
+      <img src="images/scoring-head-exploded.png" alt="Exploded view: cap on top, body with bearings, shaft, spring gap, and carrier below; L-shaped glass fence to the right">
+      <figcaption>Exploded view: cap, body, 8 mm shaft, carrier (orange), and glass corner fence. The spring sits on the shaft between the body and the carrier.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ============ RUN ============ -->
+<section class="tab" id="tab-run" hidden>
+  <div class="prose" style="max-width:72ch">
+    <div class="block">
+      <h2>Set up the bed</h2>
+      <ul>
+        <li>Screw a flat MDF board to the bed and glue 2–3 mm felt or cork on top. Glass on bare aluminium rocks and cracks under pressure.</li>
+        <li>Screw the two printed fences on as a front-left corner stop. They're 2 mm tall so they stay below 3 mm glass. Push the sheet into the corner.</li>
+        <li>Put a scrap strip of the <b>same glass</b> on the bed as the alignment pad, and enter its centre as Pad X / Pad Y. Before each score the wheel takes a short stroke there, so it's already pointing the right way when it touches your sheet.</li>
+        <li>Set X0 Y0 at the sheet's front-left corner (or wherever you set the Work zero option).</li>
+      </ul>
+    </div>
+
+    <div class="block">
+      <h2>Set the pressure with a kitchen scale</h2>
+      <ol>
+        <li>Put the scale on the bed under the wheel and tare it.</li>
+        <li>Jog Z down in 0.1 mm steps until the scale first jumps (that's the spring preload). Call that height "touch".</li>
+        <li>Keep stepping down until the scale reads about <b>3 kg</b>. The distance below "touch" is your <b>Score depth</b>.</li>
+        <li>Run a test on scrap. A good score is a thin, even, barely visible line that makes a steady hiss. White flakes or a gritty crunch mean too much pressure. Skips or a line that won't break mean too little. Adjust in 0.5 kg steps. Most stained glass lands at 3–5 kg.</li>
+      </ol>
+      <p class="muted">The 3018's Z motor can push well past this, but its frame flexes. If lines wander under load, add spring preload rather than more depth.</p>
+    </div>
+
+    <div class="block">
+      <h2>Zero Z on the glass for every sheet</h2>
+      <p>Lay a strip of paper on the glass under the wheel and jog down until the paper is just pinched. Set Z0 there. The program then drives to Z −(score depth) and the spring supplies the force.</p>
+    </div>
+
+    <div class="block">
+      <h2>Draw scores the way glass breaks</h2>
+      <ul>
+        <li>Draw each score as one open line in Inkscape (document in mm, page = your sheet). Draw only score lines. Don't draw the sheet outline.</li>
+        <li>Each score runs from edge to edge, or ends where it meets an earlier score. Glass can't break along a line that stops in the middle of the sheet.</li>
+        <li>Never cross or retrace a score. The generator warns you if two lines cross.</li>
+        <li>Keep curves gentle. Deep inside curves need extra relief scores, as with hand cutting.</li>
+        <li>Break in the numbered order shown in the preview, running each score before the next one that ends on it.</li>
+      </ul>
+    </div>
+
+    <div class="block">
+      <h2>Oil and running</h2>
+      <ul>
+        <li>The head has no reservoir once it's out of the handle. Touch a drop of cutting oil to the wheel before each sheet, or brush a thin film along the lines. Use the "Pause to re-oil" option for big sheets. It uses <code>M0</code>. If your offline controller ignores <code>M0</code>, run from a PC with Candle or UGS instead.</li>
+        <li>Files contain <code>M5</code> and never turn the spindle on, but keep it unplugged anyway.</li>
+        <li>Wear safety glasses. Handle sheets with cut-resistant gloves, and brush chips off the felt between sheets so the glass sits flat.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+</div>
+
+<script>
+(() => {
+const $ = id => document.getElementById(id);
+const SAMPLE = `<svg xmlns="http://www.w3.org/2000/svg" width="200mm" height="150mm" viewBox="0 0 200 150">
+<g fill="none" stroke="#000" stroke-width="0.5">
+<path d="M0,62 C60,38 130,88 200,56"/>
+<path d="M78,0 C80,20 60,35 65,57.14"/>
+<path d="M112,150 C110,120 140,95 128,66.25"/>
+<path d="M200,110 C185,100 176,85 172,64.8"/>
+</g></svg>`;
+const MACHINE = {w:300, h:180};
+
+// ---------- tabs ----------
+const tabs = [...document.querySelectorAll('nav button')];
+function showTab(name){
+  tabs.forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === name)));
+  ['gcode','build','run'].forEach(t => $('tab-'+t).hidden = t !== name);
+  try{ localStorage.setItem('qg-tab', name) }catch(e){}
+  if (name === 'gcode') draw();
+}
+tabs.forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
+
+// ---------- SVG parsing ----------
+function lenToMm(s){
+  if (!s) return null;
+  const m = String(s).trim().match(/^([\d.eE+-]+)\s*(mm|cm|in|pt|pc|px)?$/);
+  if (!m) return null;
+  const v = parseFloat(m[1]);
+  return v * ({mm:1, cm:10, in:25.4, pt:25.4/72, pc:25.4/6, px:25.4/96}[m[2]||'px']);
+}
+function isHidden(el, root){
+  for (let n = el; n && n !== root; n = n.parentElement){
+    if (n.getAttribute('display') === 'none') return true;
+    if (/display\s*:\s*none/.test(n.getAttribute('style')||'')) return true;
+  }
+  return !!el.closest('defs,clipPath,mask,symbol,marker,pattern');
+}
+function toRoot(el, root){
+  let m = new DOMMatrix();
+  for (let n = el; n && n !== root; n = n.parentElement){
+    const tl = n.transform && n.transform.baseVal;
+    if (tl && tl.numberOfItems){
+      const c = tl.consolidate();
+      if (c){ const a = c.matrix; m = new DOMMatrix([a.a,a.b,a.c,a.d,a.e,a.f]).multiply(m); }
+    }
+  }
+  return m;
+}
+function parseSVG(text){
+  const doc = new DOMParser().parseFromString(text, 'image/svg+xml');
+  const src = doc.documentElement;
+  if (!src || src.nodeName.toLowerCase() !== 'svg' || doc.querySelector('parsererror')) throw new Error('That file isn’t a readable SVG.');
+  const host = $('svgHost'); host.innerHTML = '';
+  const svg = document.importNode(src, true); host.appendChild(svg);
+  const wMm = lenToMm(svg.getAttribute('width')), hMm = lenToMm(svg.getAttribute('height'));
+  let vb = (svg.getAttribute('viewBox')||'').trim().split(/[\s,]+/).map(Number);
+  let u, pageW, pageH;
+  if (vb.length === 4 && vb.every(isFinite) && vb[2] > 0){
+    u = wMm ? wMm / vb[2] : 1;
+    pageW = vb[2]*u; pageH = vb[3]*u;
+  } else {
+    u = 25.4/96; vb = [0,0,(wMm||0)/u,(hMm||0)/u]; pageW = wMm||0; pageH = hMm||0;
+  }
+  const els = [...svg.querySelectorAll('path,line,polyline,polygon,rect,circle,ellipse')].filter(e => !isHidden(e, svg));
+  const paths = [];
+  const STEP = 0.2;
+  for (const el of els){
+    let L; try { L = el.getTotalLength(); } catch(e){ continue; }
+    if (!(L > 0)) continue;
+    const m = toRoot(el, svg);
+    const k = Math.sqrt(Math.abs(m.a*m.d - m.b*m.c)) * u || u;
+    const n = Math.min(40000, Math.ceil(L*k/STEP));
+    const jump = Math.max(1, 5*STEP);
+    let cur = [], prev = null;
+    for (let i = 0; i <= n; i++){
+      const p = el.getPointAtLength(Math.min(L, i*L/n));
+      const q = m.transformPoint(new DOMPoint(p.x, p.y));
+      const pt = [(q.x - vb[0])*u, pageH - (q.y - vb[1])*u];
+      if (prev && Math.hypot(pt[0]-prev[0], pt[1]-prev[1]) > jump){ if (cur.length > 1) paths.push(cur); cur = []; }
+      cur.push(pt); prev = pt;
+    }
+    if (cur.length > 1) paths.push(cur);
+  }
+  host.innerHTML = '';
+  return {paths: paths.map(p => ({pts: rdp(p, 0.02)})), sheet:{w:pageW, h:pageH}};
+}
+function rdp(pts, tol){
+  if (pts.length < 3) return pts;
+  if (Math.hypot(pts[0][0]-pts[pts.length-1][0], pts[0][1]-pts[pts.length-1][1]) < 1e-6){
+    // closed loop: split at the point farthest from the start so both halves have distinct ends
+    let far = 1, fd = 0;
+    pts.forEach((p,i) => { const d = Math.hypot(p[0]-pts[0][0], p[1]-pts[0][1]); if (d > fd){ fd = d; far = i; } });
+    if (far < 1 || far >= pts.length-1) return pts;
+    return [...rdp(pts.slice(0, far+1), tol).slice(0,-1), ...rdp(pts.slice(far), tol)];
+  }
+  const keep = new Uint8Array(pts.length); keep[0] = keep[pts.length-1] = 1;
+  const stack = [[0, pts.length-1]];
+  while (stack.length){
+    const [a,b] = stack.pop(); const [ax,ay] = pts[a], [bx,by] = pts[b];
+    const dx = bx-ax, dy = by-ay, len = Math.hypot(dx,dy) || 1e-9;
+    let dmax = 0, idx = -1;
+    for (let i = a+1; i < b; i++){
+      const d = Math.abs(dy*(pts[i][0]-ax) - dx*(pts[i][1]-ay)) / len;
+      if (d > dmax){ dmax = d; idx = i; }
+    }
+    if (dmax > tol){ keep[idx] = 1; stack.push([a,idx],[idx,b]); }
+  }
+  return pts.filter((_,i) => keep[i]);
+}
+
+// ---------- geometry ----------
+const dist = (a,b) => Math.hypot(b[0]-a[0], b[1]-a[1]);
+function dedupe(p){ const o=[p[0]]; for (let i=1;i<p.length;i++) if (dist(o[o.length-1],p[i])>1e-4) o.push(p[i]); return o; }
+function pathLen(p){ let s=0; for (let i=1;i<p.length;i++) s+=dist(p[i-1],p[i]); return s; }
+function trimStart(p, d){
+  if (d <= 0) return p;
+  let acc = 0;
+  for (let i = 1; i < p.length; i++){
+    const s = dist(p[i-1], p[i]);
+    if (acc + s > d){ const t = (d-acc)/s; return [[p[i-1][0]+(p[i][0]-p[i-1][0])*t, p[i-1][1]+(p[i][1]-p[i-1][1])*t], ...p.slice(i)]; }
+    acc += s;
+  }
+  return p.slice(-2);
+}
+function unit(a,b){ const d = dist(a,b)||1; return [(b[0]-a[0])/d, (b[1]-a[1])/d]; }
+// Pivot path for a trailing caster of offset r: pivot = contact + r * tangent, with arcs at direction changes.
+function casterComp(p, r){
+  if (r <= 0) return {path:p.slice(), sharp:0};
+  const out = []; let sharp = 0, lastSharp = null;
+  let t = unit(p[0], p[1]);
+  out.push([p[0][0]+r*t[0], p[0][1]+r*t[1]]);
+  for (let i = 0; i < p.length-1; i++){
+    t = unit(p[i], p[i+1]);
+    if (i === p.length-2){ out.push([p[i+1][0]+r*t[0], p[i+1][1]+r*t[1]]); break; }
+    const tn = unit(p[i+1], p[i+2]);
+    const ang = Math.atan2(t[0]*tn[1]-t[1]*tn[0], t[0]*tn[0]+t[1]*tn[1]);
+    if (Math.abs(ang) < 6*Math.PI/180){
+      // gentle bend on a sampled curve: one point on the averaged tangent keeps the motion smooth
+      const m = [t[0]+tn[0], t[1]+tn[1]], ml = Math.hypot(m[0], m[1]) || 1;
+      out.push([p[i+1][0]+r*m[0]/ml, p[i+1][1]+r*m[1]/ml]);
+      continue;
+    }
+    out.push([p[i+1][0]+r*t[0], p[i+1][1]+r*t[1]]);
+    {
+      if (Math.abs(ang) > 25*Math.PI/180){ if (!lastSharp || dist(lastSharp, p[i+1]) > 1.5) sharp++; lastSharp = p[i+1]; }
+      {
+        const a0 = Math.atan2(t[1], t[0]), steps = Math.ceil(Math.abs(ang)/(10*Math.PI/180));
+        for (let k = 1; k <= steps; k++){ const a = a0 + ang*k/steps; out.push([p[i+1][0]+r*Math.cos(a), p[i+1][1]+r*Math.sin(a)]); }
+      }
+    }
+  }
+  return {path:out, sharp};
+}
+function segX(a,b,c,d){
+  const r = [b[0]-a[0], b[1]-a[1]], s = [d[0]-c[0], d[1]-c[1]];
+  const den = r[0]*s[1]-r[1]*s[0]; if (Math.abs(den) < 1e-12) return null;
+  const t = ((c[0]-a[0])*s[1]-(c[1]-a[1])*s[0])/den, u = ((c[0]-a[0])*r[1]-(c[1]-a[1])*r[0])/den;
+  return (t>=0&&t<=1&&u>=0&&u<=1) ? [a[0]+t*r[0], a[1]+t*r[1]] : null;
+}
+function bbox(p){ let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity; for (const [x,y] of p){ if(x<x0)x0=x; if(y<y0)y0=y; if(x>x1)x1=x; if(y>y1)y1=y; } return {x0,y0,x1,y1}; }
+
+// ---------- build job ----------
+let src = null, job = null, fileBase = 'glass-scores';
+function num(id){ const v = parseFloat($(id).value); return isFinite(v) ? v : 0; }
+function f(v){ return (Math.round(v*1000)/1000).toFixed(3).replace(/\.?0+$/,'') || '0'; }
+
+function build(){
+  if (!src) return;
+  const o = {
+    depth: Math.abs(num('depth')), travel: Math.max(0.5, num('travel')), feed: Math.max(10, num('feed')), plunge: Math.max(10, num('plunge')),
+    r: Math.max(0, num('caster')), align: $('align').value, padx: num('padx'), pady: num('pady'), stroke: Math.max(0, num('stroke')),
+    inset: Math.max(0, num('inset')), leadout: Math.max(0, num('leadout')), origin: $('origin').value, scale: num('scale')/100 || 1, oil: Math.max(0, Math.floor(num('oil')))
+  };
+  const warns = [];
+  let contact = src.paths.map(p => p.pts.map(([x,y]) => [x*o.scale, y*o.scale]));
+  let ox = 0, oy = 0;
+  if (o.origin === 'drawing' && contact.length){ const b = bbox(contact.flat()); ox = b.x0; oy = b.y0; }
+  contact = contact.map(p => dedupe(p.map(([x,y]) => [x-ox, y-oy]))).filter(p => p.length > 1 && pathLen(p) > 0.5);
+  const sheet = {x:-ox, y:-oy, w:src.sheet.w*o.scale, h:src.sheet.h*o.scale};
+
+  const scores = contact.map((p, i) => {
+    const closed = dist(p[0], p[p.length-1]) < 0.05;
+    let c = p;
+    if (!closed){
+      c = trimStart(c, o.inset);
+      if (o.leadout > 0){ const t = unit(c[c.length-2], c[c.length-1]); const e = c[c.length-1]; c = [...c, [e[0]+t[0]*o.leadout, e[1]+t[1]*o.leadout]]; }
+    }
+    c = dedupe(c);
+    const {path, sharp} = casterComp(c, o.r);
+    if (sharp) warns.push(`Score ${i+1} has ${sharp} sharp corner${sharp>1?'s':''}. The wheel will skid as it pivots there. Round the corner off or split it into separate scores.`);
+    return {n:i+1, contact:c, pivot:path, closed, len:pathLen(c), t0:unit(c[0], c[1])};
+  });
+
+  // crossings (ignore meetings within 1.5 mm of a line's ends, which are T-junctions)
+  for (let i = 0; i < scores.length; i++) for (let j = 0; j < i; j++){
+    const A = scores[i].contact, B = scores[j].contact, ba = bbox(A), bb = bbox(B);
+    if (ba.x1 < bb.x0 || bb.x1 < ba.x0 || ba.y1 < bb.y0 || bb.y1 < ba.y0) continue;
+    let hit = null;
+    outer: for (let a = 1; a < A.length; a++) for (let b = 1; b < B.length; b++){
+      const x = segX(A[a-1], A[a], B[b-1], B[b]);
+      if (x && dist(x,A[0])>1.5 && dist(x,A[A.length-1])>1.5 && dist(x,B[0])>1.5 && dist(x,B[B.length-1])>1.5){ hit = x; break outer; }
+    }
+    if (hit) warns.push(`Score ${scores[i].n} crosses score ${scores[j].n} near X${f(hit[0])} Y${f(hit[1])}. Crossing an existing score chips the glass and ruins the break.`);
+  }
+
+  // G-code
+  const g = [];
+  g.push('(QikGLASS scoring job - generated ' + new Date().toISOString().slice(0,10) + ')');
+  g.push(`(Scores: ${scores.length}  depth: -${f(o.depth)}  feed: ${f(o.feed)}  caster: ${f(o.r)} mm)`);
+  g.push('(Z0 = glass surface. X0 Y0 = ' + (o.origin==='sheet' ? 'sheet front-left corner' : 'drawing front-left') + ')');
+  g.push('G21 G90 G94 G17', 'M5', `G0 Z${f(o.travel)}`);
+  let travelDist = 0, last = [0,0], padLen = 0;
+  const go = (x,y) => { travelDist += dist(last,[x,y]); last = [x,y]; g.push(`G0 X${f(x)} Y${f(y)}`); };
+  const down = () => { g.push('G0 Z0.5', `G1 Z${f(-o.depth)} F${f(o.plunge)}`); };
+  const up = () => g.push(`G0 Z${f(o.travel)}`);
+  scores.forEach((s, k) => {
+    g.push(`(Score ${s.n}${s.closed?' - closed loop':''}, ${f(s.len)} mm)`);
+    if (o.oil && k > 0 && k % o.oil === 0) g.push('M0 (Re-oil the wheel, then press cycle start)');
+    if (o.align === 'pad' && o.r > 0 && o.stroke > 0){
+      const h = o.stroke/2, t = s.t0;
+      const a = [o.padx - t[0]*h + o.r*t[0], o.pady - t[1]*h + o.r*t[1]], b = [o.padx + t[0]*h + o.r*t[0], o.pady + t[1]*h + o.r*t[1]];
+      g.push('(align wheel on pad)'); go(a[0], a[1]); down(); g.push(`G1 X${f(b[0])} Y${f(b[1])} F${f(o.feed)}`); last = b; padLen += o.stroke; up();
+    }
+    go(s.pivot[0][0], s.pivot[0][1]); down();
+    s.pivot.slice(1).forEach((p, i) => g.push(`G1 X${f(p[0])} Y${f(p[1])}` + (i===0 ? ` F${f(o.feed)}` : '')));
+    last = s.pivot[s.pivot.length-1]; up();
+  });
+  go(0,0); g.push('M2');
+
+  const all = scores.flatMap(s => s.pivot);
+  if (o.align === 'pad' && o.r > 0) all.push([o.padx, o.pady]);
+  const bb = all.length ? bbox(all) : {x0:0,y0:0,x1:0,y1:0};
+  if (bb.x0 < -0.01 || bb.y0 < -0.01) warns.push('Some moves go below X0 or Y0. That’s fine only if your work zero leaves room on the machine.');
+  if (bb.x1 - Math.min(0,bb.x0) > MACHINE.w || bb.y1 - Math.min(0,bb.y0) > MACHINE.h) warns.push(`The job spans ${f(bb.x1-Math.min(0,bb.x0))} × ${f(bb.y1-Math.min(0,bb.y0))} mm, larger than the 3018's 300 × 180 mm travel. Move the pad or split the sheet.`);
+  if (o.r > 0 && o.align === 'none') warns.push('Pre-align is off. The wheel will point a random way at each touch-down and can skid sideways for the first few millimetres.');
+  if (!scores.length) warns.push('No lines found. Draw score lines as paths or shapes with a stroke.');
+
+  const scoreLen = scores.reduce((a,s) => a+s.len, 0);
+  const mins = (scoreLen + padLen)/o.feed + travelDist/1500 + scores.length*(o.align==='pad'?2:1)*((o.travel+o.depth)/o.plunge + 0.02);
+  job = {scores, sheet, o, gcode: g.join('\n') + '\n', bb, warns, scoreLen, mins};
+  render();
+}
+
+// ---------- render ----------
+function render(){
+  $('gcode').value = job.gcode;
+  const st = [
+    [job.scores.length, 'scores'],
+    [(job.scoreLen/10).toFixed(1) + ' cm', 'total score length'],
+    ['≈ ' + Math.max(1, Math.round(job.mins)) + ' min', 'run time'],
+    [f(job.sheet.w) + ' × ' + f(job.sheet.h), 'sheet, mm'],
+  ];
+  $('stats').innerHTML = st.map(([b,s]) => `<div class="stat"><b>${b}</b><span>${s}</span></div>`).join('');
+  const w = $('warns'); w.innerHTML = '';
+  if (job.warns.length) job.warns.forEach(t => { const d = document.createElement('div'); d.className = 'warn'; d.textContent = t; w.appendChild(d); });
+  else { const d = document.createElement('div'); d.className = 'okmsg'; d.textContent = 'No crossings, sharp corners or travel problems found.'; w.appendChild(d); }
+  draw();
+}
+function css(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+function draw(){
+  if (!job) return;
+  const cv = $('cv'); const box = cv.parentElement.clientWidth - 24; if (box <= 0) return;
+  const pts = [[job.sheet.x, job.sheet.y], [job.sheet.x+job.sheet.w, job.sheet.y+job.sheet.h], [0,0], ...job.scores.flatMap(s => s.pivot)];
+  if (job.o.align === 'pad' && job.o.r > 0) pts.push([job.o.padx - 8, job.o.pady - 8], [job.o.padx + 8, job.o.pady + 8]);
+  const b = bbox(pts), pad = 14;
+  const W = b.x1-b.x0 || 1, H = b.y1-b.y0 || 1;
+  const cssW = box, scale = (cssW - 2*pad)/W, cssH = Math.min(Math.max(220, H*scale + 2*pad), 900);
+  const s = Math.min(scale, (cssH-2*pad)/H);
+  const dpr = window.devicePixelRatio || 1;
+  cv.width = Math.round(cssW*dpr); cv.height = Math.round(cssH*dpr); cv.style.height = cssH + 'px';
+  const c = cv.getContext('2d'); c.setTransform(dpr,0,0,dpr,0,0); c.clearRect(0,0,cssW,cssH);
+  const X = x => pad + (x-b.x0)*s + ((cssW-2*pad) - W*s)/2, Y = y => cssH - pad - (y-b.y0)*s;
+  // grid 10 mm
+  c.strokeStyle = css('--grid'); c.lineWidth = 1; c.beginPath();
+  for (let x = Math.ceil(b.x0/10)*10; x <= b.x1; x += 10){ c.moveTo(X(x),Y(b.y0)); c.lineTo(X(x),Y(b.y1)); }
+  for (let y = Math.ceil(b.y0/10)*10; y <= b.y1; y += 10){ c.moveTo(X(b.x0),Y(y)); c.lineTo(X(b.x1),Y(y)); }
+  c.stroke();
+  // sheet
+  c.fillStyle = css('--sheet'); c.strokeStyle = css('--line'); c.lineWidth = 1.5;
+  c.fillRect(X(job.sheet.x), Y(job.sheet.y+job.sheet.h), job.sheet.w*s, job.sheet.h*s);
+  c.strokeRect(X(job.sheet.x), Y(job.sheet.y+job.sheet.h), job.sheet.w*s, job.sheet.h*s);
+  // origin
+  c.strokeStyle = css('--ink'); c.lineWidth = 1.5; c.beginPath(); c.moveTo(X(0),Y(0)); c.lineTo(X(0)+18,Y(0)); c.moveTo(X(0),Y(0)); c.lineTo(X(0),Y(0)-18); c.stroke();
+  c.fillStyle = css('--muted'); c.font = '11px ' + css('--mono'); c.fillText('X0 Y0', X(0)+4, Y(0)-6);
+  // pad
+  if (job.o.align === 'pad' && job.o.r > 0){
+    c.setLineDash([3,3]); c.strokeStyle = css('--muted'); c.strokeRect(X(job.o.padx-8), Y(job.o.pady+8), 16*s, 16*s); c.setLineDash([]);
+    c.fillText('pad', X(job.o.padx-8), Y(job.o.pady+8)-4);
+  }
+  const line = (p, col, w, dash) => { c.strokeStyle = col; c.lineWidth = w; c.setLineDash(dash||[]); c.beginPath(); p.forEach((q,i) => i ? c.lineTo(X(q[0]),Y(q[1])) : c.moveTo(X(q[0]),Y(q[1]))); c.stroke(); c.setLineDash([]); };
+  job.scores.forEach(sc => { line(sc.pivot, css('--cobalt'), 1, [4,3]); line(sc.contact, css('--accent'), 2.5); });
+  c.font = '600 12px ' + css('--mono');
+  job.scores.forEach(sc => {
+    const p = sc.contact[0]; c.fillStyle = css('--amber');
+    c.beginPath(); c.arc(X(p[0]), Y(p[1]), 4, 0, Math.PI*2); c.fill();
+    const lab = String(sc.n), tw = c.measureText(lab).width;
+    c.fillStyle = css('--surface'); c.fillRect(X(p[0])+6, Y(p[1])-16, tw+8, 16);
+    c.fillStyle = css('--amber'); c.fillText(lab, X(p[0])+10, Y(p[1])-4);
+  });
+}
+
+// ---------- loading ----------
+function load(text, name){
+  try {
+    src = parseSVG(text);
+    fileBase = (name || 'glass-scores').replace(/\.svg$/i,'').replace(/[^\w.-]+/g,'-') || 'glass-scores';
+    $('fname').textContent = name ? `${name} · ${src.paths.length} line${src.paths.length===1?'':'s'}` : 'Sample: 200 × 150 mm sheet, 4 scores';
+    const padx = $('padx'); if (name) { padx.value = Math.round(src.sheet.w + 25); }
+    build();
+  } catch(e){
+    $('warns').innerHTML = ''; const d = document.createElement('div'); d.className = 'warn'; d.textContent = e.message; $('warns').appendChild(d);
+  }
+}
+function readFile(file){ if (!file) return; const r = new FileReader(); r.onload = () => load(r.result, file.name); r.readAsText(file); }
+$('file').addEventListener('change', e => readFile(e.target.files[0]));
+const drop = $('drop');
+['dragenter','dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
+['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', e => readFile(e.dataTransfer.files[0]));
+$('sampleBtn').addEventListener('click', () => { $('padx').value = 225; load(SAMPLE, null); });
+let tmr; document.querySelectorAll('.controls input:not([type=file]), .controls select').forEach(el => el.addEventListener('input', () => { clearTimeout(tmr); tmr = setTimeout(build, 120); }));
+let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(draw, 100); });
+if (window.matchMedia) matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', draw);
+new MutationObserver(draw).observe(document.documentElement, {attributes:true, attributeFilter:['data-theme']});
+
+// ---------- copy / save ----------
+$('copyBtn').addEventListener('click', () => {
+  const done = () => $('status').textContent = 'G-code copied.';
+  const fallback = () => { const t = $('gcode'); t.focus(); t.select(); $('status').textContent = 'Text selected. Press Ctrl+C (⌘C) to copy.'; };
+  try { navigator.clipboard.writeText(job.gcode).then(done, fallback); } catch(e){ fallback(); }
+});
+let downloads = null, ext = '.txt';
+if (window.claude && claude.use) claude.use('downloads').then(d => { downloads = d; $('saveBtn').hidden = !d; }).catch(() => {});
+else {
+  // Standalone page (GitHub Pages or opened from disk): plain browser download, real .nc file
+  ext = '.nc';
+  downloads = { save: async ({filename, data}) => {
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([data], {type:'text/plain'}));
+    a.download = filename; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    return {status:'saved'};
+  }};
+  $('saveBtn').hidden = false;
+  $('status').textContent = 'Saves an .nc file for the offline controller\'s SD card.';
+}
+$('saveBtn').addEventListener('click', async () => {
+  if (!downloads || !job) return;
+  try {
+    await downloads.save({filename: fileBase + '-score' + ext, data: job.gcode});
+    $('status').textContent = ext === '.nc' ? `Saved ${fileBase}-score.nc.` : `Saved ${fileBase}-score.txt. Rename it to .nc if your offline controller doesn't list .txt files.`;
+  } catch(e){
+    $('status').textContent = e && e.code === 'declined' ? 'Save cancelled.' : 'Saving isn’t available here. Use Copy and paste into a text file instead.';
+  }
+});
+
+let start = 'gcode'; try { start = localStorage.getItem('qg-tab') || 'gcode'; } catch(e){}
+load(SAMPLE, null);
+showTab(['gcode','build','run'].includes(start) ? start : 'gcode');
+})();
+</script>
+</body>
+</html>
