@@ -3,6 +3,8 @@ Stained Glass Scorer using CNC 3018
 
 A spring-loaded, self-steering glass-scoring head that drops into the spindle clamp of a **CNCTOPBAOS 3018-PRO** (GRBL, offline controller), carrying a carbide wheel head from a **QWORK 2–20 mm oil-feed glass cutter**. Swap the 775 spindle out, drop the head in, and score stained-glass patterns straight from an SVG.
 
+**Live tool:** https://belvedereem.github.io/QikGLASS/
+
 ![Exploded view of the scoring head](images/scoring-head-exploded.png)
 
 ## What's here
