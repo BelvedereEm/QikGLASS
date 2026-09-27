@@ -48,6 +48,12 @@ The defaults are estimates. Set these at the top of the `.scad` file, then expor
 
 Print in PETG or PLA+, 0.2 mm layers, 4 walls, 40 % infill. If the bearings are loose or tight, tune `lm_fit`.
 
+## Packing pieces to save glass
+
+Pieces are packed onto 6 × 4 in blanks starting at the front-left corner: left to right along the bottom, then row by row up the blank, with a gap between pieces (6 mm by default). Pieces turn 90° when that keeps the rows low. You can switch this off for glass with a grain. Anything that doesn't fit moves onto another blank, and you save one G-code file per blank.
+
+The unused glass collects in a single strip along the back of the blank. A trim score (**T**) runs edge to edge above the top row. Break it off first and keep the strip for another project. Relief scores stop at the trim line, so the strip isn't marked.
+
 ## Relief scores
 
 Glass won't break cleanly around a circle, a semicircle or a deep inside curve on its own. For every closed piece, the G-code page can add relief scores that run out to the edge of the 6 × 4 blank:
@@ -63,8 +69,8 @@ Relief lines are scored after the outline and stop where they meet it, so nothin
 1. Unplug the spindle, swap in the scoring head, and zero Z on the glass surface (paper-pinch test).
 2. Find **score depth** with a kitchen scale: jog down past first contact until it reads about 3 kg.
 3. Get a pattern: trace a PNG in `trace.html`, or draw closed piece outlines or score lines in Inkscape (in mm).
-4. In `select.html`, click the piece or pieces to cut from one 6 × 4 in blank and choose **Send to QikGLASS**. The G-code page centres them on the blank and adds relief scores. Check the warnings, then save the `.nc` file.
-5. Oil the wheel, push the blank into the corner fence, run the file, break the relief pieces, then run the outline.
+4. In `select.html`, click the piece or pieces to cut from one 6 × 4 in blank and choose **Send to QikGLASS**. The G-code page packs them from the front-left corner, adds a trim line and relief scores, and uses extra blanks if needed. Check the warnings, then save the `.nc` file.
+5. Oil the wheel, push the blank into the corner fence, and run the file. Break the trim line T first and keep that strip. Then break the relief pieces, and finally run each outline.
 
 Full build, calibration and safety notes are in the page's **Build the head** and **Calibrate & score** tabs.
 

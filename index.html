@@ -11,7 +11,7 @@ body{margin:0}
 :root{
   --bg:#F2F5F4; --surface:#FFFFFF; --sunk:#E8EEEC; --ink:#15201E; --muted:#56655F; --line:#D3DDDA;
   --accent:#0E7C74; --accent-ink:#FFFFFF; --amber:#B86E00; --cobalt:#2F4FB0; --warn:#B0501A; --warn-bg:#FBEDE3; --ok:#2F7D3A;
-  --grid:#E3EAE8; --sheet:#DCEBE8; --relief:#9A5BB5; --margin:#B9CBC7;
+  --grid:#E3EAE8; --sheet:#DCEBE8; --relief:#9A5BB5; --margin:#B9CBC7; --keep:#EEF4E6; --keep-ink:#4F7A2A;
   --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
   --body:"Source Sans 3", "Segoe UI", system-ui, sans-serif;
   --mono:"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
@@ -21,14 +21,14 @@ body{margin:0}
     color-scheme:dark;
     --bg:#0F1615; --surface:#162120; --sunk:#1C2927; --ink:#E3ECEA; --muted:#94A6A1; --line:#2A3A37;
     --accent:#43B8AC; --accent-ink:#06201D; --amber:#F0A63F; --cobalt:#8BA4F2; --warn:#F2915A; --warn-bg:#35211A; --ok:#7CC98A;
-    --grid:#1E2B29; --sheet:#1D3431; --relief:#C592DD; --margin:#35504B;
+    --grid:#1E2B29; --sheet:#1D3431; --relief:#C592DD; --margin:#35504B; --keep:#253222; --keep-ink:#A6D17E;
   }
 }
 :root[data-theme="dark"]{
   color-scheme:dark;
   --bg:#0F1615; --surface:#162120; --sunk:#1C2927; --ink:#E3ECEA; --muted:#94A6A1; --line:#2A3A37;
   --accent:#43B8AC; --accent-ink:#06201D; --amber:#F0A63F; --cobalt:#8BA4F2; --warn:#F2915A; --warn-bg:#35211A; --ok:#7CC98A;
-  --grid:#1E2B29; --sheet:#1D3431; --relief:#C592DD; --margin:#35504B;
+  --grid:#1E2B29; --sheet:#1D3431; --relief:#C592DD; --margin:#35504B; --keep:#253222; --keep-ink:#A6D17E;
 }
 *{box-sizing:border-box}
 body{background:var(--bg); color:var(--ink); font:16px/1.5 var(--body); padding-inline:16px; padding-block:0 48px}
@@ -142,10 +142,15 @@ code{font:13.5px var(--mono); background:var(--sunk); padding:1px 5px; border-ra
       <fieldset>
         <legend>Glass piece</legend>
         <div class="row"><label for="glass">Glass blank</label><select id="glass"><option value="6x4" selected>6 × 4 in</option><option value="4x6">4 × 6 in (tall)</option><option value="page">SVG page size</option></select></div>
-        <div class="row"><label for="rot">Rotate pattern</label><select id="rot"><option value="0" selected>0°</option><option value="90">90°</option></select></div>
+        <div class="row"><label for="layout">Layout<small>Packing keeps the leftover in one piece</small></label><select id="layout"><option value="nest" selected>Pack bottom-left</option><option value="keep">Keep as drawn</option></select></div>
+        <div class="row" data-for="nest"><label for="gap">Gap between pieces<small>Room to score and break</small></label><div class="unit"><input id="gap" type="number" step="1" min="2" value="6"><span>mm</span></div></div>
+        <div class="row" data-for="nest"><label for="turn">Turn pieces to fit<small>Say No for streaky glass with a grain direction</small></label><select id="turn"><option value="yes" selected>Yes</option><option value="no">No</option></select></div>
+        <div class="row" data-for="nest"><label for="trim">Save leftover<small>Adds a trim score above the top row</small></label><select id="trim"><option value="yes" selected>Yes</option><option value="no">No</option></select></div>
+        <div class="row" data-for="nest" id="blankRow" hidden><label for="blank">Blank<small>Pieces that don't fit go onto the next blank</small></label><select id="blank"><option value="0">1 of 1</option></select></div>
+        <div class="row" data-for="keep"><label for="rot">Rotate pattern</label><select id="rot"><option value="0" selected>0°</option><option value="90">90°</option></select></div>
         <div class="row"><label for="margin">Edge margin<small>Keep pieces this far from the glass edge</small></label><div class="unit"><input id="margin" type="number" step="1" min="0" value="5"><span>mm</span></div></div>
         <div class="row"><label for="scale">Scale</label><div class="unit"><input id="scale" type="number" step="1" value="100"><span>%</span></div></div>
-        <button class="btn" id="fitBtn" type="button">Fit pattern to glass</button>
+        <button class="btn" id="fitBtn" type="button" data-for="keep">Fit pattern to glass</button>
       </fieldset>
 
       <fieldset>
@@ -196,6 +201,7 @@ code{font:13.5px var(--mono); background:var(--sunk); padding:1px 5px; border-ra
         <div class="legend">
           <span><i style="border-color:var(--accent)"></i>Wheel path (the score)</span>
           <span><i style="border-color:var(--cobalt); border-top-style:dashed"></i>Pivot path (what the machine moves)</span>
+          <span><i style="border-color:var(--keep-ink)"></i>Trim line (T): break first to keep the leftover</span>
           <span><i style="border-color:var(--relief)"></i>Relief score (R): break these first, nearest the edge first</span>
           <span><i style="border-color:var(--amber)"></i>Start point and score number</span>
         </div>
@@ -344,7 +350,9 @@ code{font:13.5px var(--mono); background:var(--sunk); padding:1px 5px; border-ra
     <div class="block">
       <h2>Pieces, 6 × 4 blanks and relief scores</h2>
       <ul>
-        <li>Every job is laid out on a 6 × 4 in blank (152.4 × 101.6 mm), centred, with a 5 mm margin. Push the blank into the corner fence so its front-left corner is X0 Y0. Use “Rotate pattern” or “Fit pattern to glass” if a piece is too big.</li>
+        <li>Every job goes on a 6 × 4 in blank (152.4 × 101.6 mm). Push the blank into the corner fence so its front-left corner is X0 Y0.</li>
+        <li>With Layout set to “Pack bottom-left”, pieces fill a row from left to right starting at the front-left corner, then the next row up, with a gap between them. Pieces are turned 90° when that keeps the rows low. Turn this off for streaky glass with a grain. Any pieces that don't fit move onto blank 2, 3, and so on, each with its own G-code file.</li>
+        <li>The unused glass ends up as one strip along the back. The trim score T runs across the blank above the top row: break it first and keep the strip for another project. Relief scores stop at the trim line, so the strip stays clean.</li>
         <li>A closed outline is treated as a piece, with everything outside it as waste. With Relief scores set to Auto, the page adds relief lines out to the glass edge: a pinwheel of tangent lines around circles and outside curves, extensions of each sharp outside corner, and a comb of parallel lines out of inside curves such as a semicircle bite.</li>
         <li>Relief lines (purple, marked R) are scored after the outline and end on it without crossing it. Break them first, starting with the ones nearest the glass edge, using running pliers or grozers. Then run the piece outline.</li>
         <li>Sharp corners are split into separate sides, because a swivel wheel can't turn on the spot. Sharp inside corners are flagged. Score up to them from both sides and finish with a grinder.</li>
@@ -662,16 +670,70 @@ function reliefsFor(p, W, H, obstacles, dens, notes, label){
   return lines;
 }
 
+// Pack closed pieces onto blanks: rows fill left to right, starting at the bottom and working up
+// (first-fit decreasing height). Open lines travel together as one group.
+function packPieces(contact, W, H, o){
+  const m = o.margin, gap = o.gap, iw = W-2*m, ih = H-2*m;
+  const isClosed = p => dist(p[0], p[p.length-1]) < 0.05 && p.length > 3;
+  const units = [], open = [];
+  let pc = 0;
+  contact.forEach(p => { if (isClosed(p)) units.push({paths:[p], label:`Piece ${++pc}`}); else open.push(p); });
+  if (open.length) units.push({paths:open, label:'The open lines', open:true});
+  const tooBig = [];
+  units.forEach((u, i) => {
+    u.idx = i;
+    const b = bbox(u.paths.flat()); let w = b.x1-b.x0, hh = b.y1-b.y0;
+    const f0 = w <= iw+1e-6 && hh <= ih+1e-6, f90 = o.turn && hh <= iw+1e-6 && w <= ih+1e-6;
+    u.rot = f90 && (!f0 || hh > w);          // lie pieces down so rows stay low
+    if (u.rot) [w, hh] = [hh, w];
+    u.w = w; u.h = hh; u.fits = f0 || f90;
+    if (!u.fits) tooBig.push(`${u.label} is ${f1(b.x1-b.x0)} × ${f1(b.y1-b.y0)} mm, too big for this blank even when turned. Scale it down or split it in the pattern.`);
+  });
+  const blanks = [];
+  const place = (bl, row, u) => { bl.items.push({u, x:row.x, y:row.y, row:bl.rows.indexOf(row)}); row.x += u.w + gap; row.h = Math.max(row.h, u.h); };
+  for (const u of units.filter(u => u.fits).sort((a, b) => b.h - a.h || a.idx - b.idx)){
+    let done = false;
+    for (const bl of blanks){
+      for (let r = 0; r < bl.rows.length && !done; r++){
+        const row = bl.rows[r], last = r === bl.rows.length-1;
+        if (row.x + u.w <= W - m + 1e-6 && (u.h <= row.h + 1e-6 || (last && row.y + u.h <= H - m + 1e-6))){ place(bl, row, u); done = true; }
+      }
+      if (!done){
+        const lr = bl.rows[bl.rows.length-1], y = lr.y + lr.h + gap;
+        if (y + u.h <= H - m + 1e-6){ const row = {y, x:m, h:0}; bl.rows.push(row); place(bl, row, u); done = true; }
+      }
+      if (done) break;
+    }
+    if (!done){ const bl = {rows:[{y:m, x:m, h:0}], items:[]}; blanks.push(bl); place(bl, bl.rows[0], u); }
+  }
+  blanks.forEach(bl => {
+    bl.items.sort((a, b) => a.row - b.row || a.x - b.x);
+    bl.paths = [];
+    bl.items.forEach(({u, x, y}) => {
+      const moved = u.paths.map(p => rotPts(p, u.rot));
+      const b = bbox(moved.flat());
+      moved.forEach(p => bl.paths.push(p.map(([px, py]) => [px - b.x0 + x, py - b.y0 + y])));
+    });
+    bl.top = Math.max(...bl.rows.map(r => r.y + r.h));
+  });
+  return {blanks, tooBig};
+}
+
 function build(){
   if (!src) return;
   const o = {
     depth: Math.abs(num('depth')), travel: Math.max(0.5, num('travel')), feed: Math.max(10, num('feed')), plunge: Math.max(10, num('plunge')),
     r: Math.max(0, num('caster')), align: $('align').value, padx: num('padx'), pady: num('pady'), stroke: Math.max(0, num('stroke')),
     inset: Math.max(0, num('inset')), leadout: Math.max(0, num('leadout')), origin: $('origin').value, scale: num('scale')/100 || 1, oil: Math.max(0, Math.floor(num('oil'))),
-    glass: $('glass').value, rot: $('rot').value === '90', margin: Math.max(0, num('margin')), relief: $('relief').value, dens: DENSITY[$('density').value] || DENSITY.normal, split: $('split').value === 'split'
+    glass: $('glass').value, rot: $('rot').value === '90', margin: Math.max(0, num('margin')), relief: $('relief').value, dens: DENSITY[$('density').value] || DENSITY.normal, split: $('split').value === 'split',
+    layout: $('layout').value, gap: Math.max(2, num('gap')), turn: $('turn').value === 'yes', trim: $('trim').value === 'yes'
   };
+  document.querySelectorAll('[data-for]').forEach(el => { el.hidden = o.glass === 'page' || el.dataset.for !== o.layout; });
+  if (o.glass === 'page') document.querySelectorAll('[data-for="keep"]').forEach(el => el.hidden = false);
   const warns = [];
-  let contact = src.paths.map(p => rotPts(p.pts.map(([x,y]) => [x*o.scale, y*o.scale]), o.rot));
+  const nest = o.layout === 'nest' && o.glass !== 'page';
+  let contact = src.paths.map(p => rotPts(p.pts.map(([x,y]) => [x*o.scale, y*o.scale]), o.rot && !nest));
+  let pack = null, trimY = null;
   let sheet;
   if (o.glass === 'page'){
     let ox = 0, oy = 0;
@@ -683,7 +745,18 @@ function build(){
     sheet = {x:pb.x0-ox, y:pb.y0-oy, w:pb.x1-pb.x0, h:pb.y1-pb.y0};
   } else {
     const [W, H] = GLASS[o.glass];
-    if (contact.length){
+    if (nest && contact.length){
+      const res = packPieces(contact.map(p => dedupe(p)), W, H, o);
+      res.tooBig.forEach(t => warns.push(t));
+      const nb = Math.max(1, res.blanks.length), sel = $('blank');
+      if (sel.options.length !== nb){ const keepK = +sel.value || 0; sel.innerHTML = Array.from({length:nb}, (_, i) => `<option value="${i}">${i+1} of ${nb}</option>`).join(''); sel.value = String(Math.min(keepK, nb-1)); }
+      $('blankRow').hidden = nb < 2;
+      const k = Math.min(nb-1, +sel.value || 0), bl = res.blanks[k];
+      contact = bl ? bl.paths : [];
+      pack = {n: nb, k, count: bl ? bl.items.length : 0, top: bl ? bl.top : 0};
+      if (bl && o.trim && H - (bl.top + o.gap) >= 12) trimY = bl.top + o.gap;
+      if (nb > 1) warns.push(`These pieces need ${nb} blanks. You're viewing blank ${k+1}. Save a G-code file for each blank using the Blank menu.`);
+    } else if (contact.length){
       const b = bbox(contact.flat()), cx = (b.x0+b.x1)/2, cy = (b.y0+b.y1)/2;
       contact = contact.map(p => p.map(([x,y]) => [x - cx + W/2, y - cy + H/2]));
       const bw = b.x1-b.x0, bh = b.y1-b.y0, iw = W-2*o.margin, ih = H-2*o.margin;
@@ -695,12 +768,13 @@ function build(){
     sheet = {x:0, y:0, w:W, h:H};
   }
   contact = contact.map(p => dedupe(p)).filter(p => p.length > 1 && pathLen(p) > 0.5);
-  const W = sheet.x + sheet.w, H = sheet.y + sheet.h;
+  const W = sheet.x + sheet.w, H = sheet.y + sheet.h, reliefH = trimY != null ? trimY : H;
   const nearEdge = pt => pt[0] - sheet.x < 2 || pt[1] - sheet.y < 2 || W - pt[0] < 2 || H - pt[1] < 2;
 
   // pieces (closed) vs lines (open); split at sharp corners
   const obstacles = contact.map(p => ({pts:p, bb:bbox(p)}));
   const parts = [];
+  if (trimY != null) parts.push({pts:[[0, trimY], [W, trimY]], closed:false, relief:false, trim:true});
   let pieceNo = 0;
   contact.forEach(p => {
     const closed = dist(p[0], p[p.length-1]) < 0.05 && p.length > 3;
@@ -712,7 +786,7 @@ function build(){
   const notes = [];
   if (o.relief === 'auto'){
     contact.filter(p => p._closed).forEach(p => {
-      reliefsFor(p, W, H, obstacles, o.dens, notes, p._label).forEach(ln => parts.push({pts:ln, closed:false, relief:true}));
+      reliefsFor(p, W, reliefH, obstacles, o.dens, notes, p._label).forEach(ln => parts.push({pts:ln, closed:false, relief:true}));
     });
   }
   [...new Set(notes)].forEach(t => warns.push(t));
@@ -727,9 +801,9 @@ function build(){
     c = dedupe(c);
     const {path} = casterComp(c, o.r);
     const sharp = o.r > 0 ? findCorners(c, pt.closed, 25*DEG).corners.length : 0;
-    const n = i+1, tag = pt.relief ? 'R' + (++rn) : String(n);
+    const n = i+1, tag = pt.trim ? 'T' : pt.relief ? 'R' + (++rn) : String(trimY != null ? n-1 : n);
     if (sharp) warns.push(`Score ${tag} has ${sharp} sharp corner${sharp>1?'s':''}. The wheel will skid as it pivots there. Set “Sharp corners” to Split, or round the corner off.`);
-    return {n, tag, relief:pt.relief, contact:c, pivot:path, closed:pt.closed, len:pathLen(c), t0:unit(c[0], c[1])};
+    return {n, tag, relief:pt.relief, trim:!!pt.trim, contact:c, pivot:path, closed:pt.closed, len:pathLen(c), t0:unit(c[0], c[1])};
   }).filter(s => s.contact.length > 1);
 
   // crossings (ignore meetings within 1.5 mm of a line's ends, which are T-junctions)
@@ -771,13 +845,15 @@ function build(){
   g.push(`(Scores: ${scores.length} incl. ${rn} relief  depth: -${f(o.depth)}  feed: ${f(o.feed)}  caster: ${f(o.r)} mm)`);
   g.push(o.glass === 'page' ? '(Glass: SVG page size)' : `(Glass blank: ${o.glass === '6x4' ? '6 x 4' : '4 x 6'} in = ${f(W)} x ${f(H)} mm)`);
   g.push('(Z0 = glass surface. X0 Y0 = ' + (o.glass !== 'page' ? 'glass blank front-left corner' : o.origin==='sheet' ? 'sheet front-left corner' : 'drawing front-left') + ')');
+  if (pack) g.push(`(Blank ${pack.k+1} of ${pack.n}: ${pack.count} piece${pack.count===1?'':'s'} packed from the front-left corner)`);
+  if (trimY != null) g.push(`(Score T is the trim line at Y${f(trimY)}. Break it first and keep the ${f1(W)} x ${f1(H - trimY)} mm strip.)`);
   g.push('G21 G90 G94 G17', 'M5', `G0 Z${f(o.travel)}`);
   let travelDist = 0, last = [0,0], padLen = 0;
   const go = (x,y) => { travelDist += dist(last,[x,y]); last = [x,y]; g.push(`G0 X${f(x)} Y${f(y)}`); };
   const down = () => { g.push('G0 Z0.5', `G1 Z${f(-o.depth)} F${f(o.plunge)}`); };
   const up = () => g.push(`G0 Z${f(o.travel)}`);
   scores.forEach((s, k) => {
-    g.push(`(${s.relief ? 'Relief ' + s.tag : 'Score ' + s.tag}${s.closed?' - closed loop':''}, ${f(s.len)} mm)`);
+    g.push(`(${s.trim ? 'Trim line T' : s.relief ? 'Relief ' + s.tag : 'Score ' + s.tag}${s.closed?' - closed loop':''}, ${f(s.len)} mm)`);
     if (o.oil && k > 0 && k % o.oil === 0) g.push('M0 (Re-oil the wheel, then press cycle start)');
     if (o.align === 'pad' && o.r > 0 && o.stroke > 0){
       const h = o.stroke/2, t = s.t0;
@@ -800,7 +876,7 @@ function build(){
 
   const scoreLen = scores.reduce((a,s) => a+s.len, 0);
   const mins = (scoreLen + padLen)/o.feed + travelDist/1500 + scores.length*(o.align==='pad'?2:1)*((o.travel+o.depth)/o.plunge + 0.02);
-  job = {scores, sheet, o, gcode: g.join('\n') + '\n', bb, warns, scoreLen, mins, reliefs: rn};
+  job = {scores, sheet, o, gcode: g.join('\n') + '\n', bb, warns, scoreLen, mins, reliefs: rn, pack, trimY};
   render();
 }
 
@@ -809,6 +885,8 @@ function render(){
   $('gcode').value = job.gcode;
   const st = [
     [job.scores.length - job.reliefs + (job.reliefs ? ' + ' + job.reliefs + 'R' : ''), job.reliefs ? 'scores + relief' : 'scores'],
+    ...(job.pack ? [[`${job.pack.k+1} / ${job.pack.n}`, 'blank']] : []),
+    ...(job.trimY != null ? [[f1(job.sheet.h - job.trimY) + ' mm', 'leftover strip']] : []),
     [(job.scoreLen/10).toFixed(1) + ' cm', 'total score length'],
     ['≈ ' + Math.max(1, Math.round(job.mins)) + ' min', 'run time'],
     [job.o.glass === 'page' ? f1(job.sheet.w) + ' × ' + f1(job.sheet.h) : (job.o.glass === '6x4' ? '6 × 4' : '4 × 6'), job.o.glass === 'page' ? 'sheet, mm' : 'glass, in'],
@@ -842,6 +920,12 @@ function draw(){
   c.fillStyle = css('--sheet'); c.strokeStyle = css('--line'); c.lineWidth = 1.5;
   c.fillRect(X(job.sheet.x), Y(job.sheet.y+job.sheet.h), job.sheet.w*s, job.sheet.h*s);
   c.strokeRect(X(job.sheet.x), Y(job.sheet.y+job.sheet.h), job.sheet.w*s, job.sheet.h*s);
+  if (job.trimY != null){
+    const y0 = job.trimY, y1 = job.sheet.y + job.sheet.h;
+    c.fillStyle = css('--keep'); c.fillRect(X(job.sheet.x), Y(y1), job.sheet.w*s, (y1-y0)*s);
+    c.fillStyle = css('--keep-ink'); c.font = '600 12px ' + css('--body');
+    c.fillText(`Leftover ${f1(job.sheet.w)} × ${f1(y1-y0)} mm: keep for another project`, X(job.sheet.x) + 10, Y((y0+y1)/2) + 4);
+  }
   if (job.o.glass !== 'page' && job.o.margin > 0){
     const m = job.o.margin; c.setLineDash([2,4]); c.strokeStyle = css('--margin'); c.lineWidth = 1;
     c.strokeRect(X(job.sheet.x+m), Y(job.sheet.y+job.sheet.h-m), (job.sheet.w-2*m)*s, (job.sheet.h-2*m)*s); c.setLineDash([]);
@@ -855,10 +939,10 @@ function draw(){
     c.fillText('pad', X(job.o.padx-8), Y(job.o.pady+8)-4);
   }
   const line = (p, col, w, dash) => { c.strokeStyle = col; c.lineWidth = w; c.setLineDash(dash||[]); c.beginPath(); p.forEach((q,i) => i ? c.lineTo(X(q[0]),Y(q[1])) : c.moveTo(X(q[0]),Y(q[1]))); c.stroke(); c.setLineDash([]); };
-  job.scores.forEach(sc => { line(sc.pivot, css('--cobalt'), 1, [4,3]); line(sc.contact, css(sc.relief ? '--relief' : '--accent'), sc.relief ? 1.8 : 2.5); });
+  job.scores.forEach(sc => { line(sc.pivot, css('--cobalt'), 1, [4,3]); line(sc.contact, css(sc.trim ? '--keep-ink' : sc.relief ? '--relief' : '--accent'), sc.relief ? 1.8 : 2.5); });
   c.font = '600 12px ' + css('--mono');
   job.scores.forEach(sc => {
-    const p = sc.contact[0], col = css(sc.relief ? '--relief' : '--amber'); c.fillStyle = col;
+    const p = sc.contact[0], col = css(sc.trim ? '--keep-ink' : sc.relief ? '--relief' : '--amber'); c.fillStyle = col;
     c.beginPath(); c.arc(X(p[0]), Y(p[1]), sc.relief ? 3 : 4, 0, Math.PI*2); c.fill();
     const lab = sc.tag, tw = c.measureText(lab).width;
     c.fillStyle = css('--surface'); c.fillRect(X(p[0])+6, Y(p[1])-16, tw+8, 16);
@@ -870,6 +954,7 @@ function draw(){
 function load(text, name){
   try {
     src = parseSVG(text);
+    $('blank').innerHTML = '<option value="0">1 of 1</option>';
     fileBase = (name || 'glass-scores').replace(/\.svg$/i,'').replace(/[^\w.-]+/g,'-') || 'glass-scores';
     $('fname').textContent = name ? `${name} · ${src.paths.length} line${src.paths.length===1?'':'s'}` : 'Sample: 2 pieces on a 6 × 4 in blank';
     $('padx').value = Math.round(glassSize()[0] + 25);
@@ -887,6 +972,7 @@ drop.addEventListener('drop', e => readFile(e.dataTransfer.files[0]));
 $('sampleBtn').addEventListener('click', () => { load(SAMPLE, null); });
 function glassSize(){ const g = $('glass').value; return g === 'page' ? (src ? [src.sheet.w*num('scale')/100, src.sheet.h*num('scale')/100] : [200,150]) : GLASS[g]; }
 $('glass').addEventListener('change', () => { $('padx').value = Math.round(glassSize()[0] + 25); build(); });
+$('blank').addEventListener('change', build);
 $('fitBtn').addEventListener('click', () => {
   if (!src || !src.paths.length) return;
   const g = $('glass').value; if (g === 'page') return;
@@ -922,8 +1008,9 @@ else {
 $('saveBtn').addEventListener('click', async () => {
   if (!downloads || !job) return;
   try {
-    await downloads.save({filename: fileBase + '-score' + ext, data: job.gcode});
-    $('status').textContent = ext === '.nc' ? `Saved ${fileBase}-score.nc.` : `Saved ${fileBase}-score.txt. Rename it to .nc if your offline controller doesn't list .txt files.`;
+    const suffix = job.pack && job.pack.n > 1 ? `-blank${job.pack.k+1}` : '';
+    await downloads.save({filename: fileBase + suffix + '-score' + ext, data: job.gcode});
+    $('status').textContent = ext === '.nc' ? `Saved ${fileBase}${suffix}-score.nc.` : `Saved ${fileBase}-score.txt. Rename it to .nc if your offline controller doesn't list .txt files.`;
   } catch(e){
     $('status').textContent = e && e.code === 'declined' ? 'Save cancelled.' : 'Saving isn’t available here. Use Copy and paste into a text file instead.';
   }

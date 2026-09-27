@@ -331,8 +331,11 @@ function update(){
       [[b.x,b.y],[b.x+b.width,b.y],[b.x,b.y+b.height],[b.x+b.width,b.y+b.height]].forEach(([x,y]) => { const q = m.transformPoint(new DOMPoint(x,y)); x0 = Math.min(x0,q.x); x1 = Math.max(x1,q.x); y0 = Math.min(y0,q.y); y1 = Math.max(y1,q.y); }); });
     const w = (x1-x0)*u, hgt = (y1-y0)*u, iw = 152.4-10, ih = 101.6-10;
     const fits = (w <= iw && hgt <= ih) || (hgt <= iw && w <= ih);
-    fm.className = 'fit ' + (fits ? 'ok' : 'bad');
-    fm.textContent = `Selection is ${f1(w)} × ${f1(hgt)} mm (${f1(w/25.4)} × ${f1(hgt/25.4)} in). ` + (fits ? 'Fits a 6 × 4 in piece with a 5 mm margin.' : 'Too big for a 6 × 4 in piece. Select fewer lines or scale it down on the G-code page.');
+    const big = list.filter(id => { const b = items[id].el.getBBox(), m = toRoot(items[id].el), k = Math.sqrt(Math.abs(m.a*m.d - m.b*m.c))*u, bw = b.width*k, bh = b.height*k; return !((bw <= iw && bh <= ih) || (bh <= iw && bw <= ih)); }).length;
+    fm.className = 'fit ' + (big ? 'bad' : 'ok');
+    fm.textContent = big ? `${big} of these won't fit on a 6 × 4 in blank even when turned. Scale the pattern down or split those pieces.`
+      : fits ? `Selection is ${f1(w)} × ${f1(hgt)} mm. The G-code page packs it into the front-left corner of one 6 × 4 in blank.`
+      : `Every piece fits a 6 × 4 in blank. The G-code page packs them from the front-left corner and moves any extras onto a second blank.`;
   }
   $('sendBtn').disabled = $('saveBtn').disabled = !list.length;
   const ol = $('list'); ol.innerHTML = '';
