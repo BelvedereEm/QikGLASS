@@ -11,7 +11,7 @@ body{margin:0}
 :root{
   --bg:#F2F5F4; --surface:#FFFFFF; --sunk:#E8EEEC; --ink:#15201E; --muted:#56655F; --line:#D3DDDA;
   --accent:#0E7C74; --accent-ink:#FFFFFF; --amber:#B86E00; --cobalt:#2F4FB0; --warn:#B0501A; --warn-bg:#FBEDE3; --ok:#2F7D3A;
-  --grid:#E3EAE8; --sheet:#DCEBE8;
+  --grid:#E3EAE8; --sheet:#DCEBE8; --relief:#9A5BB5; --margin:#B9CBC7;
   --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
   --body:"Source Sans 3", "Segoe UI", system-ui, sans-serif;
   --mono:"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
@@ -21,14 +21,14 @@ body{margin:0}
     color-scheme:dark;
     --bg:#0F1615; --surface:#162120; --sunk:#1C2927; --ink:#E3ECEA; --muted:#94A6A1; --line:#2A3A37;
     --accent:#43B8AC; --accent-ink:#06201D; --amber:#F0A63F; --cobalt:#8BA4F2; --warn:#F2915A; --warn-bg:#35211A; --ok:#7CC98A;
-    --grid:#1E2B29; --sheet:#1D3431;
+    --grid:#1E2B29; --sheet:#1D3431; --relief:#C592DD; --margin:#35504B;
   }
 }
 :root[data-theme="dark"]{
   color-scheme:dark;
   --bg:#0F1615; --surface:#162120; --sunk:#1C2927; --ink:#E3ECEA; --muted:#94A6A1; --line:#2A3A37;
   --accent:#43B8AC; --accent-ink:#06201D; --amber:#F0A63F; --cobalt:#8BA4F2; --warn:#F2915A; --warn-bg:#35211A; --ok:#7CC98A;
-  --grid:#1E2B29; --sheet:#1D3431;
+  --grid:#1E2B29; --sheet:#1D3431; --relief:#C592DD; --margin:#35504B;
 }
 *{box-sizing:border-box}
 body{background:var(--bg); color:var(--ink); font:16px/1.5 var(--body); padding-inline:16px; padding-block:0 48px}
@@ -115,9 +115,10 @@ code{font:13.5px var(--mono); background:var(--sunk); padding:1px 5px; border-ra
 <header>
   <div>
     <h1>Qik<span>GLASS</span> scoring head</h1>
-    <p class="spec">3018-PRO · GRBL · QWORK carbide wheel · swivel caster 1.5 mm</p>
+    <p class="spec">3018-PRO · GRBL · QWORK carbide wheel · 6 × 4 in glass</p>
   </div>
   <nav role="tablist" aria-label="Sections">
+    <a class="navlink" href="trace.html">PNG → SVG</a>
     <a class="navlink" href="select.html">Select parts</a>
     <button role="tab" id="t-gcode" aria-selected="true" data-tab="gcode">Pattern → G-code</button>
     <button role="tab" id="t-build" aria-selected="false" data-tab="build">Build the head</button>
@@ -134,9 +135,25 @@ code{font:13.5px var(--mono); background:var(--sunk); padding:1px 5px; border-ra
         <div class="drop" id="drop">Drop an SVG here or <label for="file">choose a file</label>
           <input type="file" id="file" accept=".svg,image/svg+xml" hidden>
         </div>
-        <div class="filename" id="fname">Sample: 200 × 150 mm sheet, 4 scores</div>
+        <div class="filename" id="fname">Sample: 2 pieces on a 6 × 4 in blank</div>
         <button class="btn" id="sampleBtn" type="button">Reload sample</button>
       </div>
+
+      <fieldset>
+        <legend>Glass piece</legend>
+        <div class="row"><label for="glass">Glass blank</label><select id="glass"><option value="6x4" selected>6 × 4 in</option><option value="4x6">4 × 6 in (tall)</option><option value="page">SVG page size</option></select></div>
+        <div class="row"><label for="rot">Rotate pattern</label><select id="rot"><option value="0" selected>0°</option><option value="90">90°</option></select></div>
+        <div class="row"><label for="margin">Edge margin<small>Keep pieces this far from the glass edge</small></label><div class="unit"><input id="margin" type="number" step="1" min="0" value="5"><span>mm</span></div></div>
+        <div class="row"><label for="scale">Scale</label><div class="unit"><input id="scale" type="number" step="1" value="100"><span>%</span></div></div>
+        <button class="btn" id="fitBtn" type="button">Fit pattern to glass</button>
+      </fieldset>
+
+      <fieldset>
+        <legend>Relief scores</legend>
+        <div class="row"><label for="relief">Relief scores<small>Added around closed pieces</small></label><select id="relief"><option value="auto" selected>Auto</option><option value="off">Off</option></select></div>
+        <div class="row"><label for="density">Density<small>More lines = smaller bits to break</small></label><select id="density"><option value="light">Light</option><option value="normal" selected>Normal</option><option value="dense">Dense</option></select></div>
+        <div class="row"><label for="split">Sharp corners<small>A swivel wheel can’t turn on the spot</small></label><select id="split"><option value="split" selected>Split into sides</option><option value="keep">Keep as one</option></select></div>
+      </fieldset>
 
       <fieldset>
         <legend>Pressure &amp; height</legend>
@@ -154,7 +171,7 @@ code{font:13.5px var(--mono); background:var(--sunk); padding:1px 5px; border-ra
         <legend>Swivel wheel</legend>
         <div class="row"><label for="caster">Caster offset<small>Match <code>caster</code> in the CAD file</small></label><div class="unit"><input id="caster" type="number" step="0.1" value="1.5"><span>mm</span></div></div>
         <div class="row"><label for="align">Pre-align wheel<small>Short stroke on a scrap pad before each score</small></label><select id="align"><option value="pad" selected>On pad</option><option value="none">Off</option></select></div>
-        <div class="row"><label for="padx">Pad X</label><div class="unit"><input id="padx" type="number" step="1" value="225"><span>mm</span></div></div>
+        <div class="row"><label for="padx">Pad X</label><div class="unit"><input id="padx" type="number" step="1" value="177"><span>mm</span></div></div>
         <div class="row"><label for="pady">Pad Y</label><div class="unit"><input id="pady" type="number" step="1" value="20"><span>mm</span></div></div>
         <div class="row"><label for="stroke">Pad stroke</label><div class="unit"><input id="stroke" type="number" step="1" value="8"><span>mm</span></div></div>
       </fieldset>
@@ -167,8 +184,7 @@ code{font:13.5px var(--mono); background:var(--sunk); padding:1px 5px; border-ra
 
       <fieldset>
         <legend>Output</legend>
-        <div class="row"><label for="origin">Work zero (X0 Y0)<small>Front-left corner of…</small></label><select id="origin"><option value="sheet" selected>Sheet corner</option><option value="drawing">Drawing corner</option></select></div>
-        <div class="row"><label for="scale">Scale</label><div class="unit"><input id="scale" type="number" step="1" value="100"><span>%</span></div></div>
+        <div class="row"><label for="origin">Work zero (X0 Y0)<small>For SVG page size only. On a 6 × 4 blank, X0 Y0 is its front-left corner.</small></label><select id="origin"><option value="sheet" selected>Sheet corner</option><option value="drawing">Drawing corner</option></select></div>
         <div class="row"><label for="oil">Pause to re-oil<small>Every N scores (M0); 0 = off</small></label><div class="unit"><input id="oil" type="number" step="1" min="0" value="0"><span>#</span></div></div>
       </fieldset>
     </div>
@@ -180,6 +196,7 @@ code{font:13.5px var(--mono); background:var(--sunk); padding:1px 5px; border-ra
         <div class="legend">
           <span><i style="border-color:var(--accent)"></i>Wheel path (the score)</span>
           <span><i style="border-color:var(--cobalt); border-top-style:dashed"></i>Pivot path (what the machine moves)</span>
+          <span><i style="border-color:var(--relief)"></i>Relief score (R): break these first, nearest the edge first</span>
           <span><i style="border-color:var(--amber)"></i>Start point and score number</span>
         </div>
       </div>
@@ -325,6 +342,17 @@ code{font:13.5px var(--mono); background:var(--sunk); padding:1px 5px; border-ra
     </div>
 
     <div class="block">
+      <h2>Pieces, 6 × 4 blanks and relief scores</h2>
+      <ul>
+        <li>Every job is laid out on a 6 × 4 in blank (152.4 × 101.6 mm), centred, with a 5 mm margin. Push the blank into the corner fence so its front-left corner is X0 Y0. Use “Rotate pattern” or “Fit pattern to glass” if a piece is too big.</li>
+        <li>A closed outline is treated as a piece, with everything outside it as waste. With Relief scores set to Auto, the page adds relief lines out to the glass edge: a pinwheel of tangent lines around circles and outside curves, extensions of each sharp outside corner, and a comb of parallel lines out of inside curves such as a semicircle bite.</li>
+        <li>Relief lines (purple, marked R) are scored after the outline and end on it without crossing it. Break them first, starting with the ones nearest the glass edge, using running pliers or grozers. Then run the piece outline.</li>
+        <li>Sharp corners are split into separate sides, because a swivel wheel can't turn on the spot. Sharp inside corners are flagged. Score up to them from both sides and finish with a grinder.</li>
+        <li>Cut neighbouring pieces from separate blanks. Two outlines a line-width apart leave a sliver that won't break, and the page warns you when that happens.</li>
+      </ul>
+    </div>
+
+    <div class="block">
       <h2>Oil and running</h2>
       <ul>
         <li>The head has no reservoir once it's out of the handle. Touch a drop of cutting oil to the wheel before each sheet, or brush a thin film along the lines. Use the "Pause to re-oil" option for big sheets. It uses <code>M0</code>. If your offline controller ignores <code>M0</code>, run from a PC with Candle or UGS instead.</li>
@@ -339,12 +367,10 @@ code{font:13.5px var(--mono); background:var(--sunk); padding:1px 5px; border-ra
 <script>
 (() => {
 const $ = id => document.getElementById(id);
-const SAMPLE = `<svg xmlns="http://www.w3.org/2000/svg" width="200mm" height="150mm" viewBox="0 0 200 150">
+const SAMPLE = `<svg xmlns="http://www.w3.org/2000/svg" width="152.4mm" height="101.6mm" viewBox="0 0 152.4 101.6">
 <g fill="none" stroke="#000" stroke-width="0.5">
-<path d="M0,62 C60,38 130,88 200,56"/>
-<path d="M78,0 C80,20 60,35 65,57.14"/>
-<path d="M112,150 C110,120 140,95 128,66.25"/>
-<path d="M200,110 C185,100 176,85 172,64.8"/>
+<circle cx="46" cy="51" r="24"/>
+<path d="M88,20 L132,20 L132,84 L88,84 L88,70 A17.5,17.5 0 0 0 88,35 Z"/>
 </g></svg>`;
 const MACHINE = {w:300, h:180};
 
@@ -500,34 +526,211 @@ function bbox(p){ let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity; for (co
 // ---------- build job ----------
 let src = null, job = null, fileBase = 'glass-scores';
 function num(id){ const v = parseFloat($(id).value); return isFinite(v) ? v : 0; }
+function f1(v){ return (Math.round(v*10)/10).toString(); }
 function f(v){ return (Math.round(v*1000)/1000).toFixed(3).replace(/\.?0+$/,'') || '0'; }
+
+const GLASS = {'6x4':[152.4,101.6], '4x6':[101.6,152.4]};
+const DENSITY = {light:{step:60, gap:14}, normal:{step:45, gap:10}, dense:{step:30, gap:7}};
+const DEG = Math.PI/180;
+function rotPts(p, rot){ return rot ? p.map(([x,y]) => [y, -x]) : p; }
+function signedArea(p){ let a = 0; for (let i = 0; i < p.length; i++){ const q = p[i], r = p[(i+1)%p.length]; a += q[0]*r[1] - r[0]*q[1]; } return a/2; }
+// Subdivide a closed loop to <= step mm spacing, keeping every original vertex (so corners stay exact)
+function resampleClosed(p, step){
+  const pts = dist(p[0], p[p.length-1]) < 0.05 ? p.slice(0, -1) : p.slice(), out = [];
+  for (let i = 0; i < pts.length; i++){
+    const a = pts[i], b = pts[(i+1)%pts.length], k = Math.max(1, Math.ceil(dist(a,b)/step));
+    for (let j = 0; j < k; j++) out.push([a[0]+(b[0]-a[0])*j/k, a[1]+(b[1]-a[1])*j/k]);
+  }
+  return out;
+}
+function turnAt(a, b, c){ const u = unit(a,b), v = unit(b,c); return Math.atan2(u[0]*v[1]-u[1]*v[0], u[0]*v[0]+u[1]*v[1]); }
+// Turn angle at each vertex measured over chords reaching `span` mm back and forward,
+// so pixel noise from traced outlines doesn't look like a corner.
+function chordTurns(pts, closed, span){
+  const n = pts.length, seg = [];
+  for (let i = 0; i < n; i++) seg.push(closed || i < n-1 ? dist(pts[i], pts[(i+1)%n]) : 0);
+  const walk = (i, dirn) => {
+    let acc = 0, j = i;
+    for (let k = 0; k < n; k++){
+      const nj = dirn > 0 ? j+1 : j-1;
+      if (!closed && (nj < 0 || nj >= n)) return j;
+      const jj = (nj+n)%n; acc += dirn > 0 ? seg[j] : seg[jj]; j = jj;
+      if (acc >= span) return j;
+    }
+    return j;
+  };
+  const t = [], back = [];
+  for (let i = 0; i < n; i++){
+    if (!closed && (i === 0 || i === n-1)){ t.push(0); back.push(i); continue; }
+    const b = walk(i, -1), f = walk(i, 1);
+    back.push(b);
+    t.push(b === i || f === i ? 0 : turnAt(pts[b], pts[i], pts[f]));
+  }
+  return {t, back};
+}
+function findCorners(pts, closed, limit){
+  const {t, back} = chordTurns(pts, closed, 1.5);
+  const cand = t.map((a, i) => ({i, a})).filter(c => Math.abs(c.a) > limit && (closed || (dist(pts[c.i], pts[0]) > 2 && dist(pts[c.i], pts[pts.length-1]) > 2))).sort((x, y) => Math.abs(y.a) - Math.abs(x.a));
+  const kept = [];
+  for (const c of cand) if (!kept.some(k => dist(pts[k.i], pts[c.i]) < 2.5)) kept.push(c);
+  return {corners: kept.sort((x, y) => x.i - y.i), back};
+}
+// split a polyline at sharp corners; closed loops are rotated to start at a corner first
+function splitCorners(p, closed, limit){
+  if (p.length < 3) return [p];
+  let pts = closed ? p.slice(0, -1) : p.slice();
+  const n = pts.length;
+  const corners = findCorners(pts, closed, limit).corners.map(c => c.i);
+  if (!corners.length) return [p];
+  if (closed){ pts = [...pts.slice(corners[0]), ...pts.slice(0, corners[0]+1)]; const c0 = corners[0]; corners.splice(0, corners.length, ...corners.map(c => c - c0)); corners.push(n); }
+  const out = []; let s = 0;
+  for (const c of corners){ if (c > s){ out.push(pts.slice(s, c+1)); s = c; } }
+  if (!closed && s < pts.length-1) out.push(pts.slice(s));
+  return out.filter(q => q.length > 1 && pathLen(q) > 0.5);
+}
+// cast a ray inside the glass rectangle; stop at the first line it meets
+function castRay(o, d, W, H, obstacles, skip){
+  if (o[0] < -0.01 || o[1] < -0.01 || o[0] > W+0.01 || o[1] > H+0.01) return null;
+  let t = Infinity;
+  if (d[0] > 1e-9) t = Math.min(t, (W-o[0])/d[0]); if (d[0] < -1e-9) t = Math.min(t, -o[0]/d[0]);
+  if (d[1] > 1e-9) t = Math.min(t, (H-o[1])/d[1]); if (d[1] < -1e-9) t = Math.min(t, -o[1]/d[1]);
+  const far = [o[0]+d[0]*t, o[1]+d[1]*t];
+  for (const ob of obstacles){
+    const b = ob.bb;
+    if (Math.max(o[0],far[0]) < b.x0 || Math.min(o[0],far[0]) > b.x1 || Math.max(o[1],far[1]) < b.y0 || Math.min(o[1],far[1]) > b.y1) continue;
+    const q = ob.pts;
+    for (let i = 1; i < q.length; i++){
+      const r = [q[i][0]-q[i-1][0], q[i][1]-q[i-1][1]], den = d[0]*r[1]-d[1]*r[0];
+      if (Math.abs(den) < 1e-12) continue;
+      const w = [q[i-1][0]-o[0], q[i-1][1]-o[1]];
+      const tt = (w[0]*r[1]-w[1]*r[0])/den, uu = (w[0]*d[1]-w[1]*d[0])/den;
+      if (uu >= -1e-9 && uu <= 1+1e-9 && tt > skip && tt < t) t = tt;
+    }
+  }
+  return [o[0]+d[0]*t, o[1]+d[1]*t];
+}
+// Relief scores for one closed piece: pinwheel tangents on outside curves and corners, parallel comb out of inside curves.
+function reliefsFor(p, W, H, obstacles, dens, notes, label){
+  const q = resampleClosed(p, 1), n = q.length, s = Math.sign(signedArea(q)) || 1;
+  const dir = i => unit(q[(i+n)%n], q[(i+1)%n]);
+  const raw = [], corner = new Array(n).fill(false);
+  for (let i = 0; i < n; i++) raw.push(s*turnAt(q[(i-1+n)%n], q[i], q[(i+1)%n]));
+  const {corners: cs, back} = findCorners(q, true, 25*DEG);
+  const cand = [];
+  for (const c of cs){
+    for (let i = 0; i < n; i++) if (dist(q[i], q[c.i]) < 2.5) corner[i] = true;   // turning near a corner belongs to the corner
+    if (s*c.a > 0) cand.push({o:q[c.i], d:unit(q[back[c.i]], q[c.i])});
+    else notes.push(`${label} has a sharp inside corner. Score each side up to the corner, break gently, and tidy it with a grinder.`);
+  }
+  const sm = raw.map((_, i) => { let t = 0; for (let k = -3; k <= 3; k++){ const j = (i+k+n)%n; if (!corner[j]) t += raw[j]; } return t/7; });
+  // outside curves: pinwheel of forward tangents
+  let start = raw.findIndex((_, i) => corner[i]); if (start < 0) start = 0;
+  let acc = 0; const step = dens.step*DEG;
+  for (let k = 1; k <= n; k++){
+    const i = (start + k) % n; if (corner[i]){ acc = 0; continue; }
+    acc = Math.max(0, acc + sm[i]);
+    if (acc >= step){ const a = dir(i-1), b = dir(i); cand.push({o:q[i], d:unit([0,0],[a[0]+b[0], a[1]+b[1]])}); acc -= step; }
+  }
+  // inside curves: comb of parallel lines out through the mouth of the curve
+  const thr = 1/150;  // curves tighter than 150 mm radius
+  let st = sm.findIndex(v => v > -thr); if (st < 0) st = 0;
+  let run = [];
+  const flush = () => {
+    if (run.length > 4){
+      const tot = run.reduce((t, i) => t - Math.min(0, raw[i]), 0);
+      if (tot >= 35*DEG){
+        const a = q[run[0]], b = q[run[run.length-1]], c = unit(a, b);
+        const out = s > 0 ? [c[1], -c[0]] : [-c[1], c[0]];
+        const every = Math.max(2, Math.round(dens.gap)), half = Math.floor(every/2);
+        for (let k = half; k < run.length - half/2; k += every){
+          const i = run[k], t = dir(i), loc = s > 0 ? [t[1], -t[0]] : [-t[1], t[0]];
+          if (loc[0]*out[0] + loc[1]*out[1] > 0.3) cand.push({o:q[i], d:out});
+        }
+      }
+    }
+    run = [];
+  };
+  for (let k = 1; k <= n; k++){ const i = (st + k) % n; if (sm[i] < -thr && !corner[i]) run.push(i); else flush(); }
+  flush();
+  const lines = [];
+  for (const c of cand){
+    const e = castRay(c.o, c.d, W, H, obstacles, 0.8);
+    if (!e || dist(c.o, e) < 3) continue;
+    const ln = [e, c.o.slice()];            // score from the far end in, finishing on the piece outline
+    lines.push(ln); obstacles.push({pts:ln, bb:bbox(ln)});
+  }
+  return lines;
+}
 
 function build(){
   if (!src) return;
   const o = {
     depth: Math.abs(num('depth')), travel: Math.max(0.5, num('travel')), feed: Math.max(10, num('feed')), plunge: Math.max(10, num('plunge')),
     r: Math.max(0, num('caster')), align: $('align').value, padx: num('padx'), pady: num('pady'), stroke: Math.max(0, num('stroke')),
-    inset: Math.max(0, num('inset')), leadout: Math.max(0, num('leadout')), origin: $('origin').value, scale: num('scale')/100 || 1, oil: Math.max(0, Math.floor(num('oil')))
+    inset: Math.max(0, num('inset')), leadout: Math.max(0, num('leadout')), origin: $('origin').value, scale: num('scale')/100 || 1, oil: Math.max(0, Math.floor(num('oil'))),
+    glass: $('glass').value, rot: $('rot').value === '90', margin: Math.max(0, num('margin')), relief: $('relief').value, dens: DENSITY[$('density').value] || DENSITY.normal, split: $('split').value === 'split'
   };
   const warns = [];
-  let contact = src.paths.map(p => p.pts.map(([x,y]) => [x*o.scale, y*o.scale]));
-  let ox = 0, oy = 0;
-  if (o.origin === 'drawing' && contact.length){ const b = bbox(contact.flat()); ox = b.x0; oy = b.y0; }
-  contact = contact.map(p => dedupe(p.map(([x,y]) => [x-ox, y-oy]))).filter(p => p.length > 1 && pathLen(p) > 0.5);
-  const sheet = {x:-ox, y:-oy, w:src.sheet.w*o.scale, h:src.sheet.h*o.scale};
+  let contact = src.paths.map(p => rotPts(p.pts.map(([x,y]) => [x*o.scale, y*o.scale]), o.rot));
+  let sheet;
+  if (o.glass === 'page'){
+    let ox = 0, oy = 0;
+    const pw = src.sheet.w*o.scale, ph = src.sheet.h*o.scale;
+    let pageBox = rotPts([[0,0],[pw,ph]], o.rot); const pb = bbox(pageBox);
+    ox = pb.x0; oy = pb.y0;
+    if (o.origin === 'drawing' && contact.length){ const b = bbox(contact.flat()); ox = b.x0; oy = b.y0; }
+    contact = contact.map(p => p.map(([x,y]) => [x-ox, y-oy]));
+    sheet = {x:pb.x0-ox, y:pb.y0-oy, w:pb.x1-pb.x0, h:pb.y1-pb.y0};
+  } else {
+    const [W, H] = GLASS[o.glass];
+    if (contact.length){
+      const b = bbox(contact.flat()), cx = (b.x0+b.x1)/2, cy = (b.y0+b.y1)/2;
+      contact = contact.map(p => p.map(([x,y]) => [x - cx + W/2, y - cy + H/2]));
+      const bw = b.x1-b.x0, bh = b.y1-b.y0, iw = W-2*o.margin, ih = H-2*o.margin;
+      if (bw > iw + 0.05 || bh > ih + 0.05){
+        const fitsTurned = bh <= iw && bw <= ih;
+        warns.push(`The pattern is ${f1(bw)} × ${f1(bh)} mm, but a ${o.glass === '6x4' ? '6 × 4' : '4 × 6'} in blank only holds ${f1(iw)} × ${f1(ih)} mm inside the ${f1(o.margin)} mm margin. ${fitsTurned ? 'Rotating it 90° makes it fit.' : 'Use “Fit pattern to glass”, or select fewer lines.'}`);
+      }
+    }
+    sheet = {x:0, y:0, w:W, h:H};
+  }
+  contact = contact.map(p => dedupe(p)).filter(p => p.length > 1 && pathLen(p) > 0.5);
+  const W = sheet.x + sheet.w, H = sheet.y + sheet.h;
+  const nearEdge = pt => pt[0] - sheet.x < 2 || pt[1] - sheet.y < 2 || W - pt[0] < 2 || H - pt[1] < 2;
 
-  const scores = contact.map((p, i) => {
-    const closed = dist(p[0], p[p.length-1]) < 0.05;
-    let c = p;
-    if (!closed){
-      c = trimStart(c, o.inset);
-      if (o.leadout > 0){ const t = unit(c[c.length-2], c[c.length-1]); const e = c[c.length-1]; c = [...c, [e[0]+t[0]*o.leadout, e[1]+t[1]*o.leadout]]; }
+  // pieces (closed) vs lines (open); split at sharp corners
+  const obstacles = contact.map(p => ({pts:p, bb:bbox(p)}));
+  const parts = [];
+  let pieceNo = 0;
+  contact.forEach(p => {
+    const closed = dist(p[0], p[p.length-1]) < 0.05 && p.length > 3;
+    const label = closed ? `Piece ${++pieceNo}` : 'A line';
+    const segs = o.split ? splitCorners(p, closed, 25*DEG) : [p];
+    segs.forEach(sg => parts.push({pts:sg, closed: closed && segs.length === 1 && sg === p, relief:false}));
+    p._closed = closed; p._label = label;
+  });
+  const notes = [];
+  if (o.relief === 'auto'){
+    contact.filter(p => p._closed).forEach(p => {
+      reliefsFor(p, W, H, obstacles, o.dens, notes, p._label).forEach(ln => parts.push({pts:ln, closed:false, relief:true}));
+    });
+  }
+  [...new Set(notes)].forEach(t => warns.push(t));
+
+  let rn = 0;
+  const scores = parts.map((pt, i) => {
+    let c = pt.pts;
+    if (!pt.closed){
+      if (nearEdge(c[0])) c = trimStart(c, o.inset);
+      if (o.leadout > 0 && nearEdge(c[c.length-1])){ const t = unit(c[c.length-2], c[c.length-1]); const e = c[c.length-1]; c = [...c, [e[0]+t[0]*o.leadout, e[1]+t[1]*o.leadout]]; }
     }
     c = dedupe(c);
-    const {path, sharp} = casterComp(c, o.r);
-    if (sharp) warns.push(`Score ${i+1} has ${sharp} sharp corner${sharp>1?'s':''}. The wheel will skid as it pivots there. Round the corner off or split it into separate scores.`);
-    return {n:i+1, contact:c, pivot:path, closed, len:pathLen(c), t0:unit(c[0], c[1])};
-  });
+    const {path} = casterComp(c, o.r);
+    const sharp = o.r > 0 ? findCorners(c, pt.closed, 25*DEG).corners.length : 0;
+    const n = i+1, tag = pt.relief ? 'R' + (++rn) : String(n);
+    if (sharp) warns.push(`Score ${tag} has ${sharp} sharp corner${sharp>1?'s':''}. The wheel will skid as it pivots there. Set “Sharp corners” to Split, or round the corner off.`);
+    return {n, tag, relief:pt.relief, contact:c, pivot:path, closed:pt.closed, len:pathLen(c), t0:unit(c[0], c[1])};
+  }).filter(s => s.contact.length > 1);
 
   // crossings (ignore meetings within 1.5 mm of a line's ends, which are T-junctions)
   for (let i = 0; i < scores.length; i++) for (let j = 0; j < i; j++){
@@ -538,21 +741,43 @@ function build(){
       const x = segX(A[a-1], A[a], B[b-1], B[b]);
       if (x && dist(x,A[0])>1.5 && dist(x,A[A.length-1])>1.5 && dist(x,B[0])>1.5 && dist(x,B[B.length-1])>1.5){ hit = x; break outer; }
     }
-    if (hit) warns.push(`Score ${scores[i].n} crosses score ${scores[j].n} near X${f(hit[0])} Y${f(hit[1])}. Crossing an existing score chips the glass and ruins the break.`);
+    if (hit) warns.push(`Score ${scores[i].tag} crosses score ${scores[j].tag} near X${f(hit[0])} Y${f(hit[1])}. Crossing an existing score chips the glass and ruins the break.`);
+  }
+  // neighbouring pieces too close together leave a sliver that can't be broken out
+  const closedPieces = contact.filter(p => p._closed);
+  for (let i = 0; i < closedPieces.length; i++) for (let j = 0; j < i; j++){
+    const A = resampleClosed(closedPieces[i], 1), B = closedPieces[j], bb = bbox(B);
+    let near = 0;
+    for (const pt of A){
+      if (pt[0] < bb.x0-4 || pt[0] > bb.x1+4 || pt[1] < bb.y0-4 || pt[1] > bb.y1+4) continue;
+      let dmin = Infinity;
+      for (let k = 1; k < B.length && dmin >= 4; k++){
+        const a = B[k-1], b = B[k], vx = b[0]-a[0], vy = b[1]-a[1], L2 = vx*vx+vy*vy || 1e-9;
+        const t = Math.max(0, Math.min(1, ((pt[0]-a[0])*vx + (pt[1]-a[1])*vy)/L2));
+        dmin = Math.min(dmin, Math.hypot(pt[0]-a[0]-t*vx, pt[1]-a[1]-t*vy));
+      }
+      if (dmin < 4) near++;
+    }
+    if (near > 10) warns.push(`${closedPieces[i]._label} and ${closedPieces[j]._label} sit less than 4 mm apart for about ${near} mm. That sliver won't break out cleanly. Cut them from separate 6 × 4 blanks, or join them into one piece.`);
+  }
+  if (o.glass !== 'page'){
+    const out = scores.filter(s => !s.relief && s.contact.some(([x,y]) => x < -0.05 || y < -0.05 || x > W+0.05 || y > H+0.05)).length;
+    if (out) warns.push(`${out} score${out>1?'s run':' runs'} off the glass blank and will be scored in thin air or on the fence.`);
   }
 
   // G-code
   const g = [];
   g.push('(QikGLASS scoring job - generated ' + new Date().toISOString().slice(0,10) + ')');
-  g.push(`(Scores: ${scores.length}  depth: -${f(o.depth)}  feed: ${f(o.feed)}  caster: ${f(o.r)} mm)`);
-  g.push('(Z0 = glass surface. X0 Y0 = ' + (o.origin==='sheet' ? 'sheet front-left corner' : 'drawing front-left') + ')');
+  g.push(`(Scores: ${scores.length} incl. ${rn} relief  depth: -${f(o.depth)}  feed: ${f(o.feed)}  caster: ${f(o.r)} mm)`);
+  g.push(o.glass === 'page' ? '(Glass: SVG page size)' : `(Glass blank: ${o.glass === '6x4' ? '6 x 4' : '4 x 6'} in = ${f(W)} x ${f(H)} mm)`);
+  g.push('(Z0 = glass surface. X0 Y0 = ' + (o.glass !== 'page' ? 'glass blank front-left corner' : o.origin==='sheet' ? 'sheet front-left corner' : 'drawing front-left') + ')');
   g.push('G21 G90 G94 G17', 'M5', `G0 Z${f(o.travel)}`);
   let travelDist = 0, last = [0,0], padLen = 0;
   const go = (x,y) => { travelDist += dist(last,[x,y]); last = [x,y]; g.push(`G0 X${f(x)} Y${f(y)}`); };
   const down = () => { g.push('G0 Z0.5', `G1 Z${f(-o.depth)} F${f(o.plunge)}`); };
   const up = () => g.push(`G0 Z${f(o.travel)}`);
   scores.forEach((s, k) => {
-    g.push(`(Score ${s.n}${s.closed?' - closed loop':''}, ${f(s.len)} mm)`);
+    g.push(`(${s.relief ? 'Relief ' + s.tag : 'Score ' + s.tag}${s.closed?' - closed loop':''}, ${f(s.len)} mm)`);
     if (o.oil && k > 0 && k % o.oil === 0) g.push('M0 (Re-oil the wheel, then press cycle start)');
     if (o.align === 'pad' && o.r > 0 && o.stroke > 0){
       const h = o.stroke/2, t = s.t0;
@@ -575,7 +800,7 @@ function build(){
 
   const scoreLen = scores.reduce((a,s) => a+s.len, 0);
   const mins = (scoreLen + padLen)/o.feed + travelDist/1500 + scores.length*(o.align==='pad'?2:1)*((o.travel+o.depth)/o.plunge + 0.02);
-  job = {scores, sheet, o, gcode: g.join('\n') + '\n', bb, warns, scoreLen, mins};
+  job = {scores, sheet, o, gcode: g.join('\n') + '\n', bb, warns, scoreLen, mins, reliefs: rn};
   render();
 }
 
@@ -583,10 +808,10 @@ function build(){
 function render(){
   $('gcode').value = job.gcode;
   const st = [
-    [job.scores.length, 'scores'],
+    [job.scores.length - job.reliefs + (job.reliefs ? ' + ' + job.reliefs + 'R' : ''), job.reliefs ? 'scores + relief' : 'scores'],
     [(job.scoreLen/10).toFixed(1) + ' cm', 'total score length'],
     ['≈ ' + Math.max(1, Math.round(job.mins)) + ' min', 'run time'],
-    [f(job.sheet.w) + ' × ' + f(job.sheet.h), 'sheet, mm'],
+    [job.o.glass === 'page' ? f1(job.sheet.w) + ' × ' + f1(job.sheet.h) : (job.o.glass === '6x4' ? '6 × 4' : '4 × 6'), job.o.glass === 'page' ? 'sheet, mm' : 'glass, in'],
   ];
   $('stats').innerHTML = st.map(([b,s]) => `<div class="stat"><b>${b}</b><span>${s}</span></div>`).join('');
   const w = $('warns'); w.innerHTML = '';
@@ -617,6 +842,10 @@ function draw(){
   c.fillStyle = css('--sheet'); c.strokeStyle = css('--line'); c.lineWidth = 1.5;
   c.fillRect(X(job.sheet.x), Y(job.sheet.y+job.sheet.h), job.sheet.w*s, job.sheet.h*s);
   c.strokeRect(X(job.sheet.x), Y(job.sheet.y+job.sheet.h), job.sheet.w*s, job.sheet.h*s);
+  if (job.o.glass !== 'page' && job.o.margin > 0){
+    const m = job.o.margin; c.setLineDash([2,4]); c.strokeStyle = css('--margin'); c.lineWidth = 1;
+    c.strokeRect(X(job.sheet.x+m), Y(job.sheet.y+job.sheet.h-m), (job.sheet.w-2*m)*s, (job.sheet.h-2*m)*s); c.setLineDash([]);
+  }
   // origin
   c.strokeStyle = css('--ink'); c.lineWidth = 1.5; c.beginPath(); c.moveTo(X(0),Y(0)); c.lineTo(X(0)+18,Y(0)); c.moveTo(X(0),Y(0)); c.lineTo(X(0),Y(0)-18); c.stroke();
   c.fillStyle = css('--muted'); c.font = '11px ' + css('--mono'); c.fillText('X0 Y0', X(0)+4, Y(0)-6);
@@ -626,14 +855,14 @@ function draw(){
     c.fillText('pad', X(job.o.padx-8), Y(job.o.pady+8)-4);
   }
   const line = (p, col, w, dash) => { c.strokeStyle = col; c.lineWidth = w; c.setLineDash(dash||[]); c.beginPath(); p.forEach((q,i) => i ? c.lineTo(X(q[0]),Y(q[1])) : c.moveTo(X(q[0]),Y(q[1]))); c.stroke(); c.setLineDash([]); };
-  job.scores.forEach(sc => { line(sc.pivot, css('--cobalt'), 1, [4,3]); line(sc.contact, css('--accent'), 2.5); });
+  job.scores.forEach(sc => { line(sc.pivot, css('--cobalt'), 1, [4,3]); line(sc.contact, css(sc.relief ? '--relief' : '--accent'), sc.relief ? 1.8 : 2.5); });
   c.font = '600 12px ' + css('--mono');
   job.scores.forEach(sc => {
-    const p = sc.contact[0]; c.fillStyle = css('--amber');
-    c.beginPath(); c.arc(X(p[0]), Y(p[1]), 4, 0, Math.PI*2); c.fill();
-    const lab = String(sc.n), tw = c.measureText(lab).width;
+    const p = sc.contact[0], col = css(sc.relief ? '--relief' : '--amber'); c.fillStyle = col;
+    c.beginPath(); c.arc(X(p[0]), Y(p[1]), sc.relief ? 3 : 4, 0, Math.PI*2); c.fill();
+    const lab = sc.tag, tw = c.measureText(lab).width;
     c.fillStyle = css('--surface'); c.fillRect(X(p[0])+6, Y(p[1])-16, tw+8, 16);
-    c.fillStyle = css('--amber'); c.fillText(lab, X(p[0])+10, Y(p[1])-4);
+    c.fillStyle = col; c.fillText(lab, X(p[0])+10, Y(p[1])-4);
   });
 }
 
@@ -642,8 +871,8 @@ function load(text, name){
   try {
     src = parseSVG(text);
     fileBase = (name || 'glass-scores').replace(/\.svg$/i,'').replace(/[^\w.-]+/g,'-') || 'glass-scores';
-    $('fname').textContent = name ? `${name} · ${src.paths.length} line${src.paths.length===1?'':'s'}` : 'Sample: 200 × 150 mm sheet, 4 scores';
-    const padx = $('padx'); if (name) { padx.value = Math.round(src.sheet.w + 25); }
+    $('fname').textContent = name ? `${name} · ${src.paths.length} line${src.paths.length===1?'':'s'}` : 'Sample: 2 pieces on a 6 × 4 in blank';
+    $('padx').value = Math.round(glassSize()[0] + 25);
     build();
   } catch(e){
     $('warns').innerHTML = ''; const d = document.createElement('div'); d.className = 'warn'; d.textContent = e.message; $('warns').appendChild(d);
@@ -655,7 +884,17 @@ const drop = $('drop');
 ['dragenter','dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
 ['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
 drop.addEventListener('drop', e => readFile(e.dataTransfer.files[0]));
-$('sampleBtn').addEventListener('click', () => { $('padx').value = 225; load(SAMPLE, null); });
+$('sampleBtn').addEventListener('click', () => { load(SAMPLE, null); });
+function glassSize(){ const g = $('glass').value; return g === 'page' ? (src ? [src.sheet.w*num('scale')/100, src.sheet.h*num('scale')/100] : [200,150]) : GLASS[g]; }
+$('glass').addEventListener('change', () => { $('padx').value = Math.round(glassSize()[0] + 25); build(); });
+$('fitBtn').addEventListener('click', () => {
+  if (!src || !src.paths.length) return;
+  const g = $('glass').value; if (g === 'page') return;
+  const [W, H] = GLASS[g], m = Math.max(0, num('margin'));
+  const b = bbox(rotPts(src.paths.flatMap(p => p.pts), $('rot').value === '90'));
+  const k = Math.min((W-2*m)/(b.x1-b.x0 || 1), (H-2*m)/(b.y1-b.y0 || 1));
+  $('scale').value = Math.floor(k*100); build();
+});
 let tmr; document.querySelectorAll('.controls input:not([type=file]), .controls select').forEach(el => el.addEventListener('input', () => { clearTimeout(tmr); tmr = setTimeout(build, 120); }));
 let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(draw, 100); });
 if (window.matchMedia) matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', draw);
@@ -697,7 +936,6 @@ if (['gcode','build','run'].includes(hashTab)) start = hashTab;
 let handoff = null;
 try { handoff = JSON.parse(localStorage.getItem('qikglass-handoff') || 'null'); localStorage.removeItem('qikglass-handoff'); } catch(e){}
 if (handoff && handoff.svg && Date.now() - (handoff.t||0) < 30*60*1000){
-  $('padx').value = Math.round((handoff.sheetW || 200) + 25);
   load(handoff.svg, handoff.name || 'selection.svg');
   start = 'gcode';
 } else load(SAMPLE, null);

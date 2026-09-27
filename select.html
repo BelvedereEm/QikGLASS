@@ -10,7 +10,7 @@
 body{margin:0}
 :root{
   --bg:#F2F5F4; --surface:#FFFFFF; --sunk:#E8EEEC; --ink:#15201E; --muted:#56655F; --line:#D3DDDA;
-  --accent:#0E7C74; --accent-ink:#FFFFFF; --amber:#B86E00; --warn:#B0501A; --warn-bg:#FBEDE3;
+  --accent:#0E7C74; --accent-ink:#FFFFFF; --amber:#B86E00; --warn:#B0501A; --warn-bg:#FBEDE3; --ok:#2F7D3A;
   --unsel:#7C8C88; --sheet:#DCEBE8;
   --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
   --body:"Source Sans 3", "Segoe UI", system-ui, sans-serif;
@@ -20,14 +20,14 @@ body{margin:0}
   :root:not([data-theme="light"]){
     color-scheme:dark;
     --bg:#0F1615; --surface:#162120; --sunk:#1C2927; --ink:#E3ECEA; --muted:#94A6A1; --line:#2A3A37;
-    --accent:#43B8AC; --accent-ink:#06201D; --amber:#F0A63F; --warn:#F2915A; --warn-bg:#35211A;
+    --accent:#43B8AC; --accent-ink:#06201D; --amber:#F0A63F; --warn:#F2915A; --warn-bg:#35211A; --ok:#7CC98A;
     --unsel:#6F817D; --sheet:#1D3431;
   }
 }
 :root[data-theme="dark"]{
   color-scheme:dark;
   --bg:#0F1615; --surface:#162120; --sunk:#1C2927; --ink:#E3ECEA; --muted:#94A6A1; --line:#2A3A37;
-  --accent:#43B8AC; --accent-ink:#06201D; --amber:#F0A63F; --warn:#F2915A; --warn-bg:#35211A;
+  --accent:#43B8AC; --accent-ink:#06201D; --amber:#F0A63F; --warn:#F2915A; --warn-bg:#35211A; --ok:#7CC98A;
   --unsel:#6F817D; --sheet:#1D3431;
 }
 *{box-sizing:border-box}
@@ -68,6 +68,11 @@ main{display:grid; grid-template-columns:minmax(0,1fr) 320px; gap:20px; padding-
 #stage .qg-line.hover{stroke:var(--ink)!important; stroke-width:2.5px!important}
 #stage .qg-line.sel{stroke:var(--accent)!important; stroke-width:3px!important}
 #stage .qg-hit{stroke:transparent!important; fill:none!important; stroke-width:12px!important; vector-effect:non-scaling-stroke; pointer-events:stroke; cursor:pointer}
+#stage .qg-hit.closed{fill:rgba(0,0,0,0)!important; pointer-events:all}
+#stage .qg-line.closed.sel{fill:color-mix(in srgb, var(--accent) 18%, transparent)!important; fill-opacity:1}
+#stage .qg-line.closed.hover{fill:color-mix(in srgb, var(--ink) 8%, transparent)!important; fill-opacity:1}
+.fit{font-size:14px; padding:8px 12px; border-radius:6px; background:var(--sunk)}
+.fit.ok{color:var(--ok)} .fit.bad{background:var(--warn-bg); color:var(--warn)}
 #stage .qg-badge rect{fill:var(--surface); stroke:var(--amber); vector-effect:non-scaling-stroke}
 #stage .qg-badge text{fill:var(--amber); font-family:var(--mono); font-weight:600}
 #stage .qg-start{fill:var(--amber)}
@@ -106,6 +111,7 @@ ol#list .ctl button:hover{background:var(--line); color:var(--ink)}
     <p class="spec">Pick the score lines to cut from a full pattern SVG</p>
   </div>
   <nav aria-label="Pages">
+    <a href="trace.html">PNG → SVG</a>
     <a href="select.html" aria-current="page">Select parts</a>
     <a href="index.html#gcode">Pattern → G-code</a>
     <a href="index.html#build">Build the head</a>
@@ -133,7 +139,7 @@ ol#list .ctl button:hover{background:var(--line); color:var(--ink)}
       <button class="btn" id="fitBtn" type="button">Fit</button>
     </div>
     <div id="stage" aria-label="Pattern. Click lines to select them."></div>
-    <p class="hint">Click a line to select or deselect it. Drag a box to add lines. <kbd>Shift</kbd> + drag removes. Scroll to zoom. Hold <kbd>Space</kbd> or use Pan to move around. You can also drop an SVG file onto the pattern.</p>
+    <p class="hint">Click a line or piece to select or deselect it. Drag a box to add lines. <kbd>Shift</kbd> + drag removes. Scroll to zoom. Hold <kbd>Space</kbd> or use Pan to move around. You can also drop an SVG file onto the pattern.</p>
   </div>
 
   <aside>
@@ -146,6 +152,7 @@ ol#list .ctl button:hover{background:var(--line); color:var(--ink)}
       <div class="row"><label for="order">Cutting order</label>
         <select id="order"><option value="click" selected>Order I picked</option><option value="doc">As drawn in file</option></select>
       </div>
+      <p class="fit" id="fitMsg">Pick lines or pieces to see if they fit a 6 × 4 in piece of glass.</p>
       <div class="actions">
         <button class="btn primary" id="sendBtn" type="button" disabled>Send to QikGLASS</button>
         <button class="btn" id="saveBtn" type="button" disabled>Download selection as SVG</button>
@@ -283,10 +290,13 @@ function load(text, fname){
     const lenMm = L * Math.sqrt(Math.abs(m.a*m.d - m.b*m.c)) * u;
     if (lenMm < 0.5) return;
     el.classList.add('qg-line');
+    const tagN = el.tagName.toLowerCase();
+    const closed = /^(circle|rect|ellipse|polygon)$/.test(tagN) || (tagN === 'path' && /z\s*$/i.test(el.getAttribute('d')||''));
+    if (closed) el.classList.add('closed');
     const hit = el.cloneNode(false);
-    hit.removeAttribute('id'); hit.removeAttribute('style'); hit.setAttribute('class', 'qg-hit');
+    hit.removeAttribute('id'); hit.removeAttribute('style'); hit.setAttribute('class', closed ? 'qg-hit closed' : 'qg-hit');
     el.after(hit);
-    const it = {id: items.length, el, hit, lenMm, doc: idx};
+    const it = {id: items.length, el, hit, lenMm, doc: idx, closed};
     hit.addEventListener('pointerenter', () => el.classList.add('hover'));
     hit.addEventListener('pointerleave', () => el.classList.remove('hover'));
     hit.addEventListener('click', e => { if (panning() || dragMoved) return; e.stopPropagation(); toggle(it.id); });
@@ -313,6 +323,17 @@ function update(){
   const list = cutList();
   $('sCount').textContent = list.length;
   $('sLen').textContent = f1(list.reduce((s,id) => s + items[id].lenMm, 0)/10);
+  const fm = $('fitMsg');
+  if (!list.length){ fm.className = 'fit'; fm.textContent = 'Pick lines or pieces to see if they fit a 6 × 4 in piece of glass.'; }
+  else {
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    list.forEach(id => { const el = items[id].el, b = el.getBBox(), m = toRoot(el);
+      [[b.x,b.y],[b.x+b.width,b.y],[b.x,b.y+b.height],[b.x+b.width,b.y+b.height]].forEach(([x,y]) => { const q = m.transformPoint(new DOMPoint(x,y)); x0 = Math.min(x0,q.x); x1 = Math.max(x1,q.x); y0 = Math.min(y0,q.y); y1 = Math.max(y1,q.y); }); });
+    const w = (x1-x0)*u, hgt = (y1-y0)*u, iw = 152.4-10, ih = 101.6-10;
+    const fits = (w <= iw && hgt <= ih) || (hgt <= iw && w <= ih);
+    fm.className = 'fit ' + (fits ? 'ok' : 'bad');
+    fm.textContent = `Selection is ${f1(w)} × ${f1(hgt)} mm (${f1(w/25.4)} × ${f1(hgt/25.4)} in). ` + (fits ? 'Fits a 6 × 4 in piece with a 5 mm margin.' : 'Too big for a 6 × 4 in piece. Select fewer lines or scale it down on the G-code page.');
+  }
   $('sendBtn').disabled = $('saveBtn').disabled = !list.length;
   const ol = $('list'); ol.innerHTML = '';
   $('empty').hidden = !!list.length;
@@ -321,7 +342,7 @@ function update(){
     const li = document.createElement('li');
     const it = items[id];
     const tag = it.el.tagName.toLowerCase();
-    li.innerHTML = `<span class="n">${k+1}</span><span>${tag === 'path' ? 'Line' : tag[0].toUpperCase()+tag.slice(1)} <span class="len">${f1(it.lenMm)} mm</span></span><span class="ctl"></span>`;
+    li.innerHTML = `<span class="n">${k+1}</span><span>${it.closed && tag === 'path' ? 'Piece' : tag === 'path' ? 'Line' : tag[0].toUpperCase()+tag.slice(1)} <span class="len">${f1(it.lenMm)} mm</span></span><span class="ctl"></span>`;
     const ctl = li.querySelector('.ctl');
     const mk = (txt, label, fn, dis) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = txt; b.setAttribute('aria-label', label); b.disabled = !!dis; b.addEventListener('click', fn); ctl.appendChild(b); };
     if (manual){
@@ -386,16 +407,13 @@ window.addEventListener('keyup', e => { if (e.code === 'Space'){ spaceDown = fal
 stage.addEventListener('pointerdown', e => {
   if (!svg || e.button > 0) return;
   dragMoved = false;
-  const onHit = e.target.classList && e.target.classList.contains('qg-hit');
-  if (panning() || e.button === 1){ drag = {mode:'pan', x:e.clientX, y:e.clientY, vb:getVB(), k:1/svg.getScreenCTM().a}; }
-  else if (!onHit){ drag = {mode:'box', x:e.clientX, y:e.clientY, remove:e.shiftKey}; }
-  else { drag = {mode:'click', x:e.clientX, y:e.clientY}; return; }
-  stage.setPointerCapture(e.pointerId);
+  if (panning() || e.button === 1){ drag = {mode:'pan', x:e.clientX, y:e.clientY, vb:getVB(), k:1/svg.getScreenCTM().a, id:e.pointerId}; stage.setPointerCapture(e.pointerId); }
+  else drag = {mode:'box', x:e.clientX, y:e.clientY, remove:e.shiftKey, id:e.pointerId};
 });
 stage.addEventListener('pointermove', e => {
   if (!drag) return;
   const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
-  if (Math.hypot(dx, dy) > 4) dragMoved = true;
+  if (!dragMoved && Math.hypot(dx, dy) > 4){ dragMoved = true; try { stage.setPointerCapture(drag.id); } catch(err){} }
   if (drag.mode === 'pan'){ setVB({x:drag.vb.x - dx*drag.k, y:drag.vb.y - dy*drag.k, w:drag.vb.w, h:drag.vb.h}); }
   else if (drag.mode === 'box' && dragMoved){
     let b = $('box'); if (!b){ b = document.createElement('div'); b.id = 'box'; stage.appendChild(b); }
@@ -460,7 +478,10 @@ $('saveBtn').addEventListener('click', () => {
 });
 function setStatus(t, bad){ const s = $('status'); s.textContent = t; s.className = bad ? 'warn' : 'status'; }
 
-load(SAMPLE, null);
+let traced = null;
+try { traced = JSON.parse(localStorage.getItem('qikglass-trace') || 'null'); localStorage.removeItem('qikglass-trace'); } catch(e){}
+if (traced && traced.svg && Date.now() - (traced.t||0) < 30*60*1000){ $('fillBtn').setAttribute('aria-pressed','false'); load(traced.svg, traced.name || 'traced.svg'); }
+else load(SAMPLE, null);
 requestAnimationFrame(fit);
 })();
 </script>

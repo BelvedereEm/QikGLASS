@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QikGLASS Pattern Trace</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+body{margin:0}
+:root{
+  --bg:#F2F5F4; --surface:#FFFFFF; --sunk:#E8EEEC; --ink:#15201E; --muted:#56655F; --line:#D3DDDA;
+  --accent:#0E7C74; --accent-ink:#FFFFFF; --amber:#B86E00; --warn:#B0501A; --warn-bg:#FBEDE3; --ok:#2F7D3A;
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body:"Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0F1615; --surface:#162120; --sunk:#1C2927; --ink:#E3ECEA; --muted:#94A6A1; --line:#2A3A37;
+    --accent:#43B8AC; --accent-ink:#06201D; --amber:#F0A63F; --warn:#F2915A; --warn-bg:#35211A; --ok:#7CC98A;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0F1615; --surface:#162120; --sunk:#1C2927; --ink:#E3ECEA; --muted:#94A6A1; --line:#2A3A37;
+  --accent:#43B8AC; --accent-ink:#06201D; --amber:#F0A63F; --warn:#F2915A; --warn-bg:#35211A; --ok:#7CC98A;
+}
+*{box-sizing:border-box}
+body{background:var(--bg); color:var(--ink); font:16px/1.5 var(--body); padding-inline:16px; padding-block:0 48px}
+.wrap{max-width:1280px; margin:0 auto}
+header{display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:12px 24px; padding-block:28px 18px; border-bottom:1px solid var(--line)}
+h1{font:700 clamp(28px,4vw,40px)/1.05 var(--display); letter-spacing:-.01em; margin:0}
+h1 span{color:var(--accent)}
+.spec{font:13px/1.4 var(--mono); color:var(--muted); margin:6px 0 0}
+nav{display:flex; gap:4px; flex-wrap:wrap}
+nav a{font:600 15px var(--body); color:var(--muted); padding:8px 14px; border-radius:6px; border:1px solid transparent; text-decoration:none}
+nav a:hover{color:var(--ink)}
+nav a[aria-current="page"]{background:var(--surface); border-color:var(--line); color:var(--ink)}
+h3{font:600 17px/1.3 var(--display); margin:0}
+p{margin:0}
+a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+main{display:grid; grid-template-columns:minmax(0,1fr) 330px; gap:20px; padding-top:24px; align-items:start}
+@media (max-width:900px){ main{grid-template-columns:1fr} }
+.panel{background:var(--surface); border:1px solid var(--line); border-radius:8px}
+.toolbar{display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; padding:10px 12px; border-bottom:1px solid var(--line)}
+.toolbar .grow{flex:1}
+.btn{font:600 14px var(--body); border-radius:6px; padding:7px 12px; cursor:pointer; border:1px solid var(--line); background:var(--surface); color:var(--ink); white-space:nowrap}
+.btn.primary{background:var(--accent); color:var(--accent-ink); border-color:var(--accent)}
+.btn[aria-pressed="true"]{background:var(--sunk); border-color:var(--accent)}
+.btn:disabled{opacity:.45; cursor:not-allowed}
+.open{display:flex; align-items:center; gap:10px; font-size:14px}
+.open label{color:var(--accent); font-weight:600; cursor:pointer; text-decoration:underline}
+.fname{font:13px var(--mono); color:var(--muted); overflow-wrap:anywhere}
+#view{position:relative; background:var(--sunk); border-radius:0 0 8px 8px; padding:12px; min-height:300px}
+#view.over{outline:2px dashed var(--accent); outline-offset:-6px}
+#frame{position:relative; margin:0 auto; max-width:100%}
+#frame canvas, #frame svg{display:block; width:100%; height:auto}
+#frame svg{position:absolute; inset:0; height:100%}
+#frame.noimg canvas{opacity:0}
+.pc{fill:color-mix(in srgb, var(--accent) 16%, transparent); stroke:var(--accent); stroke-width:1.6px; vector-effect:non-scaling-stroke}
+.pc.big{fill:color-mix(in srgb, var(--warn) 18%, transparent); stroke:var(--warn)}
+.pn{font:600 11px var(--mono); fill:var(--ink); paint-order:stroke; stroke:var(--surface); stroke-width:3px; text-anchor:middle; dominant-baseline:middle; pointer-events:none}
+.busy{position:absolute; top:18px; left:18px; background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:4px 10px; font-size:13px; color:var(--muted)}
+aside{display:flex; flex-direction:column; gap:16px}
+.box{padding:16px; display:flex; flex-direction:column; gap:14px}
+.stats{display:flex; gap:22px; flex-wrap:wrap}
+.stat b{display:block; font:600 22px var(--mono); font-variant-numeric:tabular-nums}
+.stat span{font-size:12px; text-transform:uppercase; letter-spacing:.07em; color:var(--muted)}
+.stat.ok b{color:var(--ok)} .stat.bad b{color:var(--warn)}
+fieldset{border:0; margin:0; padding:0; display:flex; flex-direction:column; gap:10px}
+legend{font:600 12px var(--body); text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin-bottom:6px; padding:0}
+.row{display:grid; grid-template-columns:1fr 128px; gap:10px; align-items:center; font-size:15px}
+.row small{display:block; color:var(--muted); font-size:12.5px; line-height:1.3}
+.row .pair{display:flex; gap:4px}
+input[type=number], select{width:100%; font:14px var(--mono); padding:6px 8px; border:1px solid var(--line); border-radius:5px; background:var(--bg); color:var(--ink); font-variant-numeric:tabular-nums}
+select{font-family:var(--body)}
+.row .pair select{width:58px; padding:6px 4px}
+input[type=range]{width:100%; accent-color:var(--accent)}
+.rv{font:12px var(--mono); color:var(--muted)}
+.check{display:flex; gap:8px; align-items:flex-start; font-size:15px}
+.check input{margin-top:5px; accent-color:var(--accent)}
+.check small{display:block; color:var(--muted); font-size:12.5px}
+.actions{display:flex; flex-direction:column; gap:8px}
+.actions .btn{width:100%; padding:10px 12px; font-size:15px}
+.note{font-size:14px; color:var(--muted)}
+.status{font-size:13px; color:var(--muted); min-height:1.2em}
+.status.bad{background:var(--warn-bg); color:var(--warn); border-radius:6px; padding:8px 12px; font-size:14px}
+@media (prefers-reduced-motion: reduce){ *{transition:none!important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div>
+    <h1>Qik<span>GLASS</span> PNG → SVG</h1>
+    <p class="spec">Trace a pattern picture into cuttable piece outlines</p>
+  </div>
+  <nav aria-label="Pages">
+    <a href="trace.html" aria-current="page">PNG → SVG</a>
+    <a href="select.html">Select parts</a>
+    <a href="index.html#gcode">Pattern → G-code</a>
+    <a href="index.html#build">Build the head</a>
+    <a href="index.html#run">Calibrate &amp; score</a>
+  </nav>
+</header>
+
+<main>
+  <div class="panel">
+    <div class="toolbar">
+      <div class="open">
+        <input type="file" id="file" accept="image/png,image/jpeg,image/webp,image/gif,image/bmp" hidden>
+        <label for="file">Open PNG</label>
+        <span class="fname" id="fname">Sample pattern</span>
+      </div>
+      <span class="grow"></span>
+      <button class="btn" id="imgBtn" type="button" aria-pressed="true">Show picture</button>
+    </div>
+    <div id="view">
+      <div id="frame"><canvas id="cv" width="10" height="10" aria-label="Pattern picture"></canvas><svg id="ov" aria-label="Traced pieces"></svg></div>
+      <div class="busy" id="busy" hidden>Tracing…</div>
+    </div>
+  </div>
+
+  <aside>
+    <div class="panel box">
+      <div class="stats">
+        <div class="stat"><b id="sPieces">0</b><span>pieces</span></div>
+        <div class="stat ok"><b id="sFit">0</b><span>fit 6 × 4</span></div>
+        <div class="stat bad"><b id="sBig">0</b><span>too big</span></div>
+      </div>
+      <p class="note">Each piece's outline follows the inside edge of its pattern lines, the way pattern shears cut. Orange pieces won't fit on a 6 × 4 in blank.</p>
+      <div class="actions">
+        <button class="btn primary" id="sendBtn" type="button" disabled>Send to Select parts</button>
+        <button class="btn" id="saveBtn" type="button" disabled>Download SVG</button>
+      </div>
+      <p class="status" id="status"></p>
+    </div>
+
+    <div class="panel box">
+      <fieldset>
+        <legend>Real size</legend>
+        <div class="row"><label for="width">Pattern width<small id="hint">Height follows automatically</small></label>
+          <div class="pair"><input id="width" type="number" step="0.1" min="0.1" value="7.5"><select id="unit"><option value="in" selected>in</option><option value="mm">mm</option></select></div></div>
+      </fieldset>
+      <fieldset>
+        <legend>Tracing</legend>
+        <div class="row"><label for="thr">Line darkness<small>Pixels darker than this count as pattern lines</small></label><div><input id="thr" type="range" min="10" max="245" value="128"><div class="rv" id="thrV">128</div></div></div>
+        <div class="row"><label for="gap">Close gaps<small>Joins broken lines so pieces don't merge</small></label><div><input id="gap" type="range" min="0" max="6" value="1"><div class="rv" id="gapV">1 px</div></div></div>
+        <div class="row"><label for="smooth">Smoothing<small>0 keeps sharp corners</small></label><div><input id="smooth" type="range" min="0" max="4" value="2"><div class="rv" id="smoothV">2</div></div></div>
+        <div class="row"><label for="minA">Ignore specks under</label><div class="pair"><input id="minA" type="number" step="1" min="0" value="30"><span class="rv" style="align-self:center">mm²</span></div></div>
+        <label class="check"><input type="checkbox" id="outer"><span>Include the area around the pattern<small>Usually the background, not a piece</small></span></label>
+      </fieldset>
+    </div>
+  </aside>
+</main>
+</div>
+
+<script>
+(() => {
+const $ = id => document.getElementById(id);
+const BLANK = [152.4, 101.6], MARGIN = 5;
+let img = null, name = null, dpiGuess = null, pieces = [], dims = null, timer;
+
+// ---------- sample pattern drawn on a canvas ----------
+function sampleImage(){
+  const c = document.createElement('canvas'); c.width = 960; c.height = 600;
+  const g = c.getContext('2d');
+  g.fillStyle = '#fff'; g.fillRect(0,0,960,600);
+  g.strokeStyle = '#111'; g.lineWidth = 7; g.lineCap = 'round'; g.lineJoin = 'round';
+  g.strokeRect(20,20,920,560);
+  g.beginPath(); g.arc(300,300,110,0,Math.PI*2); g.stroke();
+  g.beginPath(); g.moveTo(300,190); g.lineTo(300,410); g.stroke();
+  g.beginPath(); g.moveTo(20,170); g.bezierCurveTo(160,110,330,130,420,20); g.stroke();
+  g.beginPath(); g.moveTo(410,300); g.bezierCurveTo(560,300,660,190,940,230); g.stroke();
+  g.beginPath(); g.moveTo(620,580); g.bezierCurveTo(600,470,690,360,745,237); g.stroke();
+  g.beginPath(); g.moveTo(20,450); g.bezierCurveTo(110,430,170,450,222,378); g.stroke();
+  g.beginPath(); g.moveTo(640,20); g.bezierCurveTo(610,110,650,170,700,213); g.stroke();
+  g.beginPath(); g.moveTo(265,405); g.bezierCurveTo(300,470,340,520,330,580); g.stroke();
+  return c;
+}
+
+// ---------- tracing ----------
+function otsu(gray){
+  const hist = new Array(256).fill(0); for (const v of gray) hist[v]++;
+  const total = gray.length; let sum = 0; for (let i = 0; i < 256; i++) sum += i*hist[i];
+  let sumB = 0, wB = 0, best = 0, t = 128;
+  for (let i = 0; i < 256; i++){
+    wB += hist[i]; if (!wB) continue; const wF = total - wB; if (!wF) break;
+    sumB += i*hist[i]; const mB = sumB/wB, mF = (sum-sumB)/wF, v = wB*wF*(mB-mF)*(mB-mF);
+    if (v > best){ best = v; t = i; }
+  }
+  return t;
+}
+let gray = null, gw = 0, gh = 0, pxScale = 1;
+function prepare(){
+  const maxSide = 1600, k = Math.min(1, maxSide/Math.max(img.width, img.height));
+  gw = Math.round(img.width*k); gh = Math.round(img.height*k); pxScale = 1/k;
+  const cv = $('cv'); cv.width = gw; cv.height = gh;
+  const g = cv.getContext('2d', {willReadFrequently:true});
+  g.fillStyle = '#fff'; g.fillRect(0,0,gw,gh); g.drawImage(img, 0, 0, gw, gh);
+  const d = g.getImageData(0,0,gw,gh).data; gray = new Uint8Array(gw*gh);
+  for (let i = 0, j = 0; i < gray.length; i++, j += 4) gray[i] = (d[j]*299 + d[j+1]*587 + d[j+2]*114)/1000 | 0;
+  $('ov').setAttribute('viewBox', `0 0 ${gw} ${gh}`);
+}
+function trace(){
+  const thr = +$('thr').value, gap = +$('gap').value, smooth = +$('smooth').value;
+  const mmPerPx = widthMm() / gw;
+  const minPx = Math.max(4, (+$('minA').value || 0) / (mmPerPx*mmPerPx));
+  const N = gw*gh;
+  let dark = new Uint8Array(N);
+  for (let i = 0; i < N; i++) dark[i] = gray[i] < thr ? 1 : 0;
+  // close gaps: grow the lines by `gap` pixels (separable square dilation)
+  for (let pass = 0; pass < gap; pass++){
+    const t = new Uint8Array(N);
+    for (let y = 0; y < gh; y++) for (let x = 0; x < gw; x++){ const i = y*gw+x; t[i] = dark[i] || (x>0 && dark[i-1]) || (x<gw-1 && dark[i+1]); }
+    const t2 = new Uint8Array(N);
+    for (let y = 0; y < gh; y++) for (let x = 0; x < gw; x++){ const i = y*gw+x; t2[i] = t[i] || (y>0 && t[i-gw]) || (y<gh-1 && t[i+gw]); }
+    dark = t2;
+  }
+  // label light regions (4-connected)
+  const lab = new Int32Array(N); const regions = []; const stack = new Int32Array(N);
+  for (let s = 0; s < N; s++){
+    if (dark[s] || lab[s]) continue;
+    const id = regions.length + 1; let sp = 0; stack[sp++] = s; lab[s] = id;
+    let area = 0, border = false, x0 = gw, y0 = gh, x1 = 0, y1 = 0, first = s;
+    while (sp){
+      const i = stack[--sp], x = i % gw, y = (i / gw) | 0; area++;
+      if (x === 0 || y === 0 || x === gw-1 || y === gh-1) border = true;
+      if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
+      if (i < first) first = i;
+      if (x > 0 && !dark[i-1] && !lab[i-1]){ lab[i-1] = id; stack[sp++] = i-1; }
+      if (x < gw-1 && !dark[i+1] && !lab[i+1]){ lab[i+1] = id; stack[sp++] = i+1; }
+      if (y > 0 && !dark[i-gw] && !lab[i-gw]){ lab[i-gw] = id; stack[sp++] = i-gw; }
+      if (y < gh-1 && !dark[i+gw] && !lab[i+gw]){ lab[i+gw] = id; stack[sp++] = i+gw; }
+    }
+    regions.push({id, area, border, first, bb:[x0,y0,x1,y1]});
+  }
+  const out = [];
+  for (const r of regions){
+    if (r.area < minPx) continue;
+    if (r.border && !$('outer').checked) continue;
+    let poly = boundary(lab, r.id, r.first);
+    poly = rdp(poly, 1.2);   // removes the pixel staircase
+    for (let k = 0; k < smooth; k++) poly = chaikin(poly);   // rounds curves, leaves real corners sharp
+    if (smooth) poly = rdp(poly, 0.25);
+    if (poly.length < 3) continue;
+    const mm = poly.map(([x,y]) => [x*mmPerPx, y*mmPerPx]);
+    const b = bbox(mm), bw = b.x1-b.x0, bh = b.y1-b.y0;
+    const iw = BLANK[0]-2*MARGIN, ih = BLANK[1]-2*MARGIN;
+    const fits = (bw <= iw && bh <= ih) || (bh <= iw && bw <= ih);
+    out.push({px:poly, mm, bw, bh, fits, cx:(r.bb[0]+r.bb[2])/2, cy:(r.bb[1]+r.bb[3])/2, area:r.area*mmPerPx*mmPerPx});
+  }
+  // number pieces top-to-bottom, left-to-right
+  out.sort((a,b) => (Math.round(a.cy/40) - Math.round(b.cy/40)) || (a.cx - b.cx));
+  return out;
+}
+// crack-following around one 4-connected region; vertices at pixel corners, region kept on the right
+function boundary(lab, id, first){
+  const inR = (x,y) => x >= 0 && y >= 0 && x < gw && y < gh && lab[y*gw+x] === id;
+  const sx = first % gw, sy = (first / gw) | 0;
+  const pts = [[sx, sy]]; let x = sx, y = sy, d = 0, guard = 0;
+  const AHEAD = [ [[0,0],[0,-1]], [[-1,0],[0,0]], [[-1,-1],[-1,0]], [[0,-1],[-1,-1]] ]; // [right, left] pixel offsets per direction
+  const STEP = [[1,0],[0,1],[-1,0],[0,-1]];
+  do {
+    const [[rx,ry],[lx,ly]] = AHEAD[d];
+    const R = inR(x+rx, y+ry), L = inR(x+lx, y+ly);
+    if (R){ if (L) d = (d+3)%4; } else d = (d+1)%4;
+    x += STEP[d][0]; y += STEP[d][1];
+    const last = pts[pts.length-1], prev = pts[pts.length-2];
+    if (prev && (prev[0] === last[0] && last[0] === x || prev[1] === last[1] && last[1] === y)) pts[pts.length-1] = [x,y]; else pts.push([x,y]);
+  } while ((x !== sx || y !== sy) && ++guard < 4*gw*gh);
+  if (pts.length > 1 && pts[pts.length-1][0] === sx && pts[pts.length-1][1] === sy) pts.pop();
+  return pts;
+}
+function rdpOpen(pts, tol){
+  if (pts.length < 3) return pts;
+  const keep = new Uint8Array(pts.length); keep[0] = keep[pts.length-1] = 1;
+  const st = [[0, pts.length-1]];
+  while (st.length){
+    const [a,b] = st.pop(), [ax,ay] = pts[a], [bx,by] = pts[b], dx = bx-ax, dy = by-ay, len = Math.hypot(dx,dy) || 1e-9;
+    let dm = 0, idx = -1;
+    for (let i = a+1; i < b; i++){ const dd = Math.abs(dy*(pts[i][0]-ax) - dx*(pts[i][1]-ay))/len; if (dd > dm){ dm = dd; idx = i; } }
+    if (dm > tol){ keep[idx] = 1; st.push([a,idx],[idx,b]); }
+  }
+  return pts.filter((_,i) => keep[i]);
+}
+function rdp(poly, tol){   // closed polygon: split at the vertex farthest from the first
+  if (poly.length < 4) return poly;
+  let far = 1, fd = 0;
+  poly.forEach((p,i) => { const d = Math.hypot(p[0]-poly[0][0], p[1]-poly[0][1]); if (d > fd){ fd = d; far = i; } });
+  const a = rdpOpen(poly.slice(0, far+1), tol), b = rdpOpen([...poly.slice(far), poly[0]], tol);
+  return [...a.slice(0,-1), ...b.slice(0,-1)];
+}
+function subdivide(p, maxLen){
+  const o = [];
+  for (let i = 0; i < p.length; i++){ const a = p[i], b = p[(i+1)%p.length], k = Math.max(1, Math.ceil(Math.hypot(b[0]-a[0], b[1]-a[1])/maxLen)); for (let j = 0; j < k; j++) o.push([a[0]+(b[0]-a[0])*j/k, a[1]+(b[1]-a[1])*j/k]); }
+  return o;
+}
+function chaikin(p){
+  const n = p.length, o = [];
+  for (let i = 0; i < n; i++){
+    const a = p[(i-1+n)%n], b = p[i], c = p[(i+1)%n];
+    const u = [b[0]-a[0], b[1]-a[1]], v = [c[0]-b[0], c[1]-b[1]];
+    const turn = Math.abs(Math.atan2(u[0]*v[1]-u[1]*v[0], u[0]*v[0]+u[1]*v[1]));
+    if (turn > 50*Math.PI/180 || b.corner){ const k = [b[0], b[1]]; k.corner = true; o.push(k); continue; }
+    o.push([b[0]*.75+a[0]*.25, b[1]*.75+a[1]*.25], [b[0]*.75+c[0]*.25, b[1]*.75+c[1]*.25]);
+  }
+  return o;
+}
+function bbox(p){ let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity; for (const [x,y] of p){ if(x<x0)x0=x; if(y<y0)y0=y; if(x>x1)x1=x; if(y>y1)y1=y; } return {x0,y0,x1,y1}; }
+
+// ---------- UI ----------
+function widthMm(){ const v = Math.max(0.1, +$('width').value || 1); return $('unit').value === 'in' ? v*25.4 : v; }
+const f1 = v => (Math.round(v*10)/10).toString();
+function run(){
+  if (!img) return;
+  $('busy').hidden = false;
+  setTimeout(() => {
+    pieces = trace();
+    $('busy').hidden = true;
+    render();
+  }, 10);
+}
+function schedule(){ clearTimeout(timer); timer = setTimeout(run, 150); }
+function render(){
+  const ov = $('ov'); ov.innerHTML = '';
+  const NS = 'http://www.w3.org/2000/svg', fs = Math.max(10, gw/70);
+  pieces.forEach((p, i) => {
+    const path = document.createElementNS(NS, 'path');
+    path.setAttribute('d', 'M' + p.px.map(q => q[0].toFixed(1) + ',' + q[1].toFixed(1)).join(' L') + ' Z');
+    path.setAttribute('class', 'pc' + (p.fits ? '' : ' big'));
+    const t = document.createElementNS(NS, 'title'); t.textContent = `Piece ${i+1}: ${f1(p.bw)} × ${f1(p.bh)} mm${p.fits ? '' : ' (too big for 6 × 4 in glass)'}`; path.appendChild(t);
+    const b = bbox(p.px), tx = document.createElementNS(NS, 'text');
+    tx.setAttribute('x', (b.x0+b.x1)/2); tx.setAttribute('y', (b.y0+b.y1)/2); tx.setAttribute('class', 'pn'); tx.setAttribute('font-size', fs); tx.textContent = i+1;
+    ov.append(path, tx);
+  });
+  const fit = pieces.filter(p => p.fits).length;
+  $('sPieces').textContent = pieces.length; $('sFit').textContent = fit; $('sBig').textContent = pieces.length - fit;
+  $('sendBtn').disabled = $('saveBtn').disabled = !pieces.length;
+  const w = widthMm(), h = w*gh/gw;
+  $('hint').textContent = `Height ${$('unit').value === 'in' ? f1(h/25.4) + ' in' : f1(h) + ' mm'}${dpiGuess ? ` · file says ${dpiGuess} dpi` : ''}`;
+  if (!pieces.length) setStatus('No closed pieces found. Try moving Line darkness, or raise Close gaps if lines are broken.', true);
+  else setStatus('');
+}
+function setStatus(t, bad){ const s = $('status'); s.textContent = t; s.className = bad ? 'status bad' : 'status'; }
+function svgText(){
+  const w = widthMm(), h = w*gh/gw, mmPerPx = w/gw;
+  const paths = pieces.map((p, i) => `<path id="piece-${i+1}" d="M${p.mm.map(q => q[0].toFixed(2) + ',' + q[1].toFixed(2)).join(' L')} Z"/>`);
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w.toFixed(2)}mm" height="${h.toFixed(2)}mm" viewBox="0 0 ${w.toFixed(3)} ${h.toFixed(3)}">\n` +
+    `<!-- Traced by QikGLASS from ${(name || 'sample').replace(/--/g,'-')}: ${pieces.length} pieces -->\n` +
+    `<g fill="none" stroke="#000" stroke-width="${(0.3).toFixed(2)}">\n${paths.join('\n')}\n</g>\n</svg>\n`;
+}
+const baseName = () => (name || 'sample-pattern').replace(/\.[a-z0-9]+$/i, '').replace(/[^\w.-]+/g, '-');
+
+// PNG pHYs chunk → dpi, so real size can be filled in automatically
+function pngDpi(buf){
+  const b = new Uint8Array(buf); if (b[0] !== 0x89 || b[1] !== 0x50) return null;
+  let i = 8; const dv = new DataView(buf);
+  while (i + 8 < b.length){
+    const len = dv.getUint32(i), type = String.fromCharCode(b[i+4],b[i+5],b[i+6],b[i+7]);
+    if (type === 'pHYs'){ const ppu = dv.getUint32(i+8), unitB = b[i+16]; return unitB === 1 ? Math.round(ppu*0.0254) : null; }
+    if (type === 'IDAT') return null;
+    i += 12 + len;
+  }
+  return null;
+}
+function openFile(file){
+  if (!file) return;
+  if (!/^image\//.test(file.type)) return setStatus('That isn’t a picture file. Open a PNG or JPG.', true);
+  const r = new FileReader();
+  r.onload = () => {
+    dpiGuess = pngDpi(r.result);
+    const url = URL.createObjectURL(file), im = new Image();
+    im.onload = () => {
+      img = im; name = file.name;
+      const dpi = dpiGuess && dpiGuess > 30 ? dpiGuess : 96;
+      if ($('unit').value === 'in') $('width').value = f1(im.width/dpi); else $('width').value = f1(im.width/dpi*25.4);
+      $('fname').textContent = `${file.name} · ${im.width} × ${im.height} px`;
+      prepare(); $('thr').value = Math.min(200, Math.max(40, otsu(gray))); $('thrV').textContent = $('thr').value;
+      run();
+    };
+    im.onerror = () => setStatus('That picture couldn’t be opened.', true);
+    im.src = url;
+  };
+  r.readAsArrayBuffer(file);
+}
+$('file').addEventListener('change', e => openFile(e.target.files[0]));
+const view = $('view');
+['dragenter','dragover'].forEach(ev => view.addEventListener(ev, e => { e.preventDefault(); view.classList.add('over'); }));
+['dragleave','drop'].forEach(ev => view.addEventListener(ev, e => { e.preventDefault(); view.classList.remove('over'); }));
+view.addEventListener('drop', e => openFile(e.dataTransfer.files[0]));
+$('thr').addEventListener('input', () => { $('thrV').textContent = $('thr').value; schedule(); });
+$('gap').addEventListener('input', () => { $('gapV').textContent = $('gap').value + ' px'; schedule(); });
+$('smooth').addEventListener('input', () => { $('smoothV').textContent = $('smooth').value; schedule(); });
+['minA','outer','width'].forEach(id => $(id).addEventListener('input', schedule));
+$('unit').addEventListener('change', () => { const v = +$('width').value || 0; $('width').value = f1($('unit').value === 'in' ? v/25.4 : v*25.4); schedule(); });
+$('imgBtn').addEventListener('click', e => { const b = e.currentTarget, on = b.getAttribute('aria-pressed') !== 'true'; b.setAttribute('aria-pressed', String(on)); $('frame').classList.toggle('noimg', !on); });
+$('sendBtn').addEventListener('click', () => {
+  try { localStorage.setItem('qikglass-trace', JSON.stringify({svg: svgText(), name: baseName() + '.svg', t: Date.now()})); }
+  catch(e){ return setStatus('Your browser blocked the hand-off. Use Download SVG, then open that file on the Select parts page.', true); }
+  location.href = 'select.html';
+});
+$('saveBtn').addEventListener('click', () => {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([svgText()], {type:'image/svg+xml'}));
+  a.download = baseName() + '.svg'; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  setStatus(`Saved ${baseName()}.svg.`);
+});
+
+img = sampleImage(); prepare(); run();
+})();
+</script>
+</body>
+</html>
