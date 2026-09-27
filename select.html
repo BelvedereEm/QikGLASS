@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QikGLASS Select Parts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+body{margin:0}
+:root{
+  --bg:#F2F5F4; --surface:#FFFFFF; --sunk:#E8EEEC; --ink:#15201E; --muted:#56655F; --line:#D3DDDA;
+  --accent:#0E7C74; --accent-ink:#FFFFFF; --amber:#B86E00; --warn:#B0501A; --warn-bg:#FBEDE3;
+  --unsel:#7C8C88; --sheet:#DCEBE8;
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body:"Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0F1615; --surface:#162120; --sunk:#1C2927; --ink:#E3ECEA; --muted:#94A6A1; --line:#2A3A37;
+    --accent:#43B8AC; --accent-ink:#06201D; --amber:#F0A63F; --warn:#F2915A; --warn-bg:#35211A;
+    --unsel:#6F817D; --sheet:#1D3431;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0F1615; --surface:#162120; --sunk:#1C2927; --ink:#E3ECEA; --muted:#94A6A1; --line:#2A3A37;
+  --accent:#43B8AC; --accent-ink:#06201D; --amber:#F0A63F; --warn:#F2915A; --warn-bg:#35211A;
+  --unsel:#6F817D; --sheet:#1D3431;
+}
+*{box-sizing:border-box}
+body{background:var(--bg); color:var(--ink); font:16px/1.5 var(--body); padding-inline:16px; padding-block:0 48px}
+.wrap{max-width:1280px; margin:0 auto}
+header{display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:12px 24px; padding-block:28px 18px; border-bottom:1px solid var(--line)}
+h1{font:700 clamp(28px,4vw,40px)/1.05 var(--display); letter-spacing:-.01em; margin:0}
+h1 span{color:var(--accent)}
+.spec{font:13px/1.4 var(--mono); color:var(--muted); margin:6px 0 0}
+nav{display:flex; gap:4px; flex-wrap:wrap}
+nav a{font:600 15px var(--body); color:var(--muted); padding:8px 14px; border-radius:6px; border:1px solid transparent; text-decoration:none}
+nav a:hover{color:var(--ink)}
+nav a[aria-current="page"]{background:var(--surface); border-color:var(--line); color:var(--ink)}
+h3{font:600 17px/1.3 var(--display); margin:0}
+p{margin:0}
+a:focus-visible, button:focus-visible, select:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+main{display:grid; grid-template-columns:minmax(0,1fr) 320px; gap:20px; padding-top:24px; align-items:start}
+@media (max-width:900px){ main{grid-template-columns:1fr} }
+.panel{background:var(--surface); border:1px solid var(--line); border-radius:8px}
+.toolbar{display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:10px 12px; border-bottom:1px solid var(--line)}
+.toolbar .sep{width:1px; height:24px; background:var(--line); margin:0 4px}
+.toolbar .grow{flex:1}
+.btn{font:600 14px var(--body); border-radius:6px; padding:7px 12px; cursor:pointer; border:1px solid var(--line); background:var(--surface); color:var(--ink); white-space:nowrap}
+.btn.primary{background:var(--accent); color:var(--accent-ink); border-color:var(--accent)}
+.btn.icon{padding:7px 10px; font-family:var(--mono)}
+.btn[aria-pressed="true"]{background:var(--sunk); border-color:var(--accent)}
+.btn:disabled{opacity:.45; cursor:not-allowed}
+.drop{display:flex; align-items:center; gap:10px; font-size:14px; color:var(--muted)}
+.drop label{color:var(--accent); font-weight:600; cursor:pointer; text-decoration:underline}
+.fname{font:13px var(--mono); color:var(--muted); overflow-wrap:anywhere}
+#stage{position:relative; height:min(68vh,640px); min-height:320px; background:var(--sunk); overflow:hidden; border-radius:0 0 8px 8px; touch-action:none; user-select:none}
+#stage.over{outline:2px dashed var(--accent); outline-offset:-6px}
+#stage > svg{position:absolute; inset:0; width:100%; height:100%; display:block}
+#stage.pan, #stage.pan *{cursor:grab!important}
+#stage .qg-page{fill:var(--sheet); stroke:var(--line); stroke-width:1px; vector-effect:non-scaling-stroke}
+#stage .qg-line{stroke:var(--unsel)!important; stroke-width:1.5px!important; vector-effect:non-scaling-stroke; fill:none!important; stroke-dasharray:none!important; pointer-events:none; opacity:1!important}
+#stage.fills .qg-line{fill:revert!important; fill-opacity:.35}
+#stage .qg-line.hover{stroke:var(--ink)!important; stroke-width:2.5px!important}
+#stage .qg-line.sel{stroke:var(--accent)!important; stroke-width:3px!important}
+#stage .qg-hit{stroke:transparent!important; fill:none!important; stroke-width:12px!important; vector-effect:non-scaling-stroke; pointer-events:stroke; cursor:pointer}
+#stage .qg-badge rect{fill:var(--surface); stroke:var(--amber); vector-effect:non-scaling-stroke}
+#stage .qg-badge text{fill:var(--amber); font-family:var(--mono); font-weight:600}
+#stage .qg-start{fill:var(--amber)}
+#box{position:absolute; border:1.5px solid var(--accent); background:color-mix(in srgb, var(--accent) 12%, transparent); pointer-events:none}
+.hint{padding:8px 12px; font-size:13px; color:var(--muted); border-top:1px solid var(--line)}
+kbd{font:12px var(--mono); border:1px solid var(--line); border-bottom-width:2px; border-radius:4px; padding:0 4px; background:var(--bg)}
+aside{display:flex; flex-direction:column; gap:16px}
+.summary{padding:16px; display:flex; flex-direction:column; gap:14px}
+.stats{display:flex; gap:24px}
+.stat b{display:block; font:600 22px var(--mono); font-variant-numeric:tabular-nums}
+.stat span{font-size:12px; text-transform:uppercase; letter-spacing:.07em; color:var(--muted)}
+.row{display:grid; grid-template-columns:1fr auto; gap:10px; align-items:center; font-size:15px}
+select{font:14px var(--body); padding:6px 8px; border:1px solid var(--line); border-radius:5px; background:var(--bg); color:var(--ink)}
+.actions{display:flex; flex-direction:column; gap:8px}
+.actions .btn{width:100%; padding:10px 12px; font-size:15px}
+.listhead{display:flex; justify-content:space-between; align-items:baseline; padding:12px 16px; border-bottom:1px solid var(--line)}
+ol#list{list-style:none; margin:0; padding:6px 0; max-height:360px; overflow:auto}
+ol#list li{display:grid; grid-template-columns:28px 1fr auto; align-items:center; gap:8px; padding:4px 10px 4px 16px; font-size:14px}
+ol#list li:hover{background:var(--sunk)}
+ol#list .n{font:600 13px var(--mono); color:var(--amber)}
+ol#list .len{font:13px var(--mono); color:var(--muted); font-variant-numeric:tabular-nums}
+ol#list .ctl{display:flex; gap:2px}
+ol#list .ctl button{border:0; background:none; color:var(--muted); cursor:pointer; font:14px var(--mono); padding:2px 6px; border-radius:4px}
+ol#list .ctl button:hover{background:var(--line); color:var(--ink)}
+.empty{padding:14px 16px; color:var(--muted); font-size:14px}
+.warn{background:var(--warn-bg); color:var(--warn); border-radius:6px; padding:8px 12px; font-size:14px}
+.status{font-size:13px; color:var(--muted); min-height:1.2em}
+@media (prefers-reduced-motion: reduce){ *{transition:none!important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div>
+    <h1>Qik<span>GLASS</span> select parts</h1>
+    <p class="spec">Pick the score lines to cut from a full pattern SVG</p>
+  </div>
+  <nav aria-label="Pages">
+    <a href="select.html" aria-current="page">Select parts</a>
+    <a href="index.html#gcode">Pattern → G-code</a>
+    <a href="index.html#build">Build the head</a>
+    <a href="index.html#run">Calibrate &amp; score</a>
+  </nav>
+</header>
+
+<main>
+  <div class="panel">
+    <div class="toolbar">
+      <div class="drop">
+        <input type="file" id="file" accept=".svg,image/svg+xml" hidden>
+        <label for="file">Open SVG</label>
+        <span class="fname" id="fname">Sample pattern</span>
+      </div>
+      <span class="grow"></span>
+      <button class="btn" id="allBtn" type="button">All</button>
+      <button class="btn" id="noneBtn" type="button">None</button>
+      <button class="btn" id="invBtn" type="button">Invert</button>
+      <span class="sep"></span>
+      <button class="btn" id="fillBtn" type="button" aria-pressed="false" title="Show the pattern's own fill colours">Fills</button>
+      <button class="btn" id="panBtn" type="button" aria-pressed="false" title="Drag to move the view (or hold Space)">Pan</button>
+      <button class="btn icon" id="zoomOut" type="button" aria-label="Zoom out">−</button>
+      <button class="btn icon" id="zoomIn" type="button" aria-label="Zoom in">+</button>
+      <button class="btn" id="fitBtn" type="button">Fit</button>
+    </div>
+    <div id="stage" aria-label="Pattern. Click lines to select them."></div>
+    <p class="hint">Click a line to select or deselect it. Drag a box to add lines. <kbd>Shift</kbd> + drag removes. Scroll to zoom. Hold <kbd>Space</kbd> or use Pan to move around. You can also drop an SVG file onto the pattern.</p>
+  </div>
+
+  <aside>
+    <div class="panel summary">
+      <div class="stats">
+        <div class="stat"><b id="sCount">0</b><span>selected</span></div>
+        <div class="stat"><b id="sLen">0</b><span>cm long</span></div>
+        <div class="stat"><b id="sTotal">0</b><span>in file</span></div>
+      </div>
+      <div class="row"><label for="order">Cutting order</label>
+        <select id="order"><option value="click" selected>Order I picked</option><option value="doc">As drawn in file</option></select>
+      </div>
+      <div class="actions">
+        <button class="btn primary" id="sendBtn" type="button" disabled>Send to QikGLASS</button>
+        <button class="btn" id="saveBtn" type="button" disabled>Download selection as SVG</button>
+      </div>
+      <p class="status" id="status">The G-code page opens with only these lines, in this order, ready to save as an .nc file.</p>
+    </div>
+    <div class="panel">
+      <div class="listhead"><h3>Cut list</h3><span class="fname">break in this order</span></div>
+      <ol id="list"></ol>
+      <p class="empty" id="empty">Nothing selected yet. Click lines in the pattern.</p>
+    </div>
+    <div id="warns"></div>
+  </aside>
+</main>
+</div>
+
+<script>
+(() => {
+const $ = id => document.getElementById(id);
+const NS = 'http://www.w3.org/2000/svg';
+const SAMPLE = `<svg xmlns="http://www.w3.org/2000/svg" width="200mm" height="150mm" viewBox="0 0 200 150">
+<g fill="none" stroke="#000" stroke-width="0.5">
+<path d="M0,62 C60,38 130,88 200,56"/>
+<path d="M78,0 C80,20 60,35 65,57.14"/>
+<path d="M112,150 C110,120 140,95 128,66.25"/>
+<path d="M200,110 C185,100 176,85 172,64.8"/>
+<path d="M0,120 C30,112 60,125 111.5,128 M140,0 C145,20 160,30 164,49.6"/>
+<circle cx="40" cy="95" r="14"/>
+<path d="M22,0 C30,20 20,40 30,51"/>
+</g></svg>`;
+
+const stage = $('stage');
+let svg = null, vb0 = null, u = 1, items = [], order = [], name = null;
+
+// ---------- helpers ----------
+function lenToMm(s){
+  if (!s) return null;
+  const m = String(s).trim().match(/^([\d.eE+-]+)\s*(mm|cm|in|pt|pc|px)?$/);
+  if (!m) return null;
+  return parseFloat(m[1]) * ({mm:1, cm:10, in:25.4, pt:25.4/72, pc:25.4/6, px:25.4/96}[m[2]||'px']);
+}
+function isHidden(el, root){
+  for (let n = el; n && n !== root; n = n.parentElement){
+    if (n.getAttribute('display') === 'none') return true;
+    if (/display\s*:\s*none/.test(n.getAttribute('style')||'')) return true;
+  }
+  return !!el.closest('defs,clipPath,mask,symbol,marker,pattern');
+}
+function toRoot(el){
+  let m = new DOMMatrix();
+  for (let n = el; n && n !== svg; n = n.parentElement){
+    const tl = n.transform && n.transform.baseVal;
+    if (tl && tl.numberOfItems){ const c = tl.consolidate(); if (c){ const a = c.matrix; m = new DOMMatrix([a.a,a.b,a.c,a.d,a.e,a.f]).multiply(m); } }
+  }
+  return m;
+}
+function sanitize(root){
+  root.querySelectorAll('script,foreignObject,iframe,object,embed,audio,video').forEach(n => n.remove());
+  root.querySelectorAll('*').forEach(n => {
+    [...n.attributes].forEach(a => {
+      if (/^on/i.test(a.name)) n.removeAttribute(a.name);
+      if (/href$/i.test(a.name) && /^\s*javascript:/i.test(a.value)) n.removeAttribute(a.name);
+    });
+  });
+  [...root.attributes].forEach(a => { if (/^on/i.test(a.name)) root.removeAttribute(a.name); });
+}
+
+// Split a path's d into subpaths, each starting with an absolute moveto, so every stroke is selectable on its own.
+const ARGC = {m:2,l:2,h:1,v:1,c:6,s:4,q:4,t:2,a:7,z:0};
+function splitD(d){
+  const toks = d.match(/[a-zA-Z]|[-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?/g) || [];
+  const subs = []; let cur = null, i = 0, cx = 0, cy = 0, sx = 0, sy = 0, cmd = null;
+  const num = () => parseFloat(toks[i++]);
+  while (i < toks.length){
+    if (/[a-zA-Z]/.test(toks[i])) cmd = toks[i++];
+    else if (!cmd) { i++; continue; }
+    const lc = cmd.toLowerCase(), rel = cmd !== cmd.toUpperCase(), n = ARGC[lc];
+    if (lc === 'z'){ if (cur) cur.push('Z'); cx = sx; cy = sy; cmd = null; continue; }
+    if (i + n > toks.length) break;
+    const args = []; for (let k = 0; k < n; k++) args.push(num());
+    if (lc === 'm'){
+      const x = rel ? cx + args[0] : args[0], y = rel ? cy + args[1] : args[1];
+      cur = [`M${x},${y}`]; subs.push(cur); cx = sx = x; cy = sy = y;
+      cmd = rel ? 'l' : 'L';   // extra coordinate pairs after a moveto are linetos
+      continue;
+    }
+    if (!cur){ cur = [`M${cx},${cy}`]; subs.push(cur); }
+    cur.push(cmd + args.join(','));
+    if (lc === 'h') cx = rel ? cx + args[0] : args[0];
+    else if (lc === 'v') cy = rel ? cy + args[0] : args[0];
+    else { cx = rel ? cx + args[n-2] : args[n-2]; cy = rel ? cy + args[n-1] : args[n-1]; }
+  }
+  return subs.map(s => s.join(' ')).filter(s => /[a-zA-Z]/.test(s.slice(1)));
+}
+
+// ---------- load ----------
+function load(text, fname){
+  let doc;
+  try { doc = new DOMParser().parseFromString(text, 'image/svg+xml'); } catch(e){}
+  const src = doc && doc.documentElement;
+  if (!src || src.nodeName.toLowerCase() !== 'svg' || doc.querySelector('parsererror')) return setStatus('That file isn’t a readable SVG. Export it from Inkscape as Plain SVG and try again.', true);
+  sanitize(src);
+  const wMm = lenToMm(src.getAttribute('width'));
+  let v = (src.getAttribute('viewBox')||'').trim().split(/[\s,]+/).map(Number);
+  if (v.length === 4 && v.every(isFinite) && v[2] > 0){ u = wMm ? wMm / v[2] : 1; }
+  else {
+    u = 25.4/96; const hMm = lenToMm(src.getAttribute('height'));
+    v = [0, 0, (wMm||200)/u, (hMm||150)/u];
+  }
+  vb0 = {x:v[0], y:v[1], w:v[2], h:v[3]};
+  svg = document.importNode(src, true);
+  svg.setAttribute('viewBox', `${vb0.x} ${vb0.y} ${vb0.w} ${vb0.h}`);
+  svg.removeAttribute('width'); svg.removeAttribute('height');
+  svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+  stage.innerHTML = ''; stage.appendChild(svg);
+  const page = document.createElementNS(NS, 'rect');
+  Object.entries({x:vb0.x, y:vb0.y, width:vb0.w, height:vb0.h, class:'qg-page'}).forEach(([k,val]) => page.setAttribute(k, val));
+  svg.insertBefore(page, svg.firstChild);
+
+  // split compound paths
+  [...svg.querySelectorAll('path')].forEach(p => {
+    if (isHidden(p, svg)) return;
+    const parts = splitD(p.getAttribute('d') || '');
+    if (parts.length < 2) return;
+    parts.forEach(d => { const c = p.cloneNode(false); c.removeAttribute('id'); c.setAttribute('d', d); p.parentNode.insertBefore(c, p); });
+    p.remove();
+  });
+
+  items = []; order = [];
+  const els = [...svg.querySelectorAll('path,line,polyline,polygon,rect,circle,ellipse')].filter(e => e !== page && !isHidden(e, svg));
+  els.forEach((el, idx) => {
+    let L = 0; try { L = el.getTotalLength(); } catch(e){}
+    if (!(L > 0)) return;
+    const m = toRoot(el);
+    const lenMm = L * Math.sqrt(Math.abs(m.a*m.d - m.b*m.c)) * u;
+    if (lenMm < 0.5) return;
+    el.classList.add('qg-line');
+    const hit = el.cloneNode(false);
+    hit.removeAttribute('id'); hit.removeAttribute('style'); hit.setAttribute('class', 'qg-hit');
+    el.after(hit);
+    const it = {id: items.length, el, hit, lenMm, doc: idx};
+    hit.addEventListener('pointerenter', () => el.classList.add('hover'));
+    hit.addEventListener('pointerleave', () => el.classList.remove('hover'));
+    hit.addEventListener('click', e => { if (panning() || dragMoved) return; e.stopPropagation(); toggle(it.id); });
+    items.push(it);
+  });
+  const badges = document.createElementNS(NS, 'g'); badges.id = 'qg-badges'; svg.appendChild(badges);
+  name = fname;
+  $('fname').textContent = fname ? `${fname} · ${f1(vb0.w*u)} × ${f1(vb0.h*u)} mm` : `Sample pattern · ${f1(vb0.w*u)} × ${f1(vb0.h*u)} mm`;
+  $('sTotal').textContent = items.length;
+  setStatus(items.length ? 'The G-code page opens with only these lines, in this order, ready to save as an .nc file.' : 'No lines found in this file. Score lines need to be paths or shapes, not a pasted image.', !items.length);
+  if (!fname){ [0,1,2,3].forEach(i => order.push(i)); }
+  update();
+}
+const f1 = v => (Math.round(v*10)/10).toString();
+
+// ---------- selection ----------
+function toggle(id){ const k = order.indexOf(id); if (k >= 0) order.splice(k,1); else order.push(id); update(); }
+function add(ids){ ids.forEach(id => { if (!order.includes(id)) order.push(id); }); update(); }
+function remove(ids){ order = order.filter(id => !ids.includes(id)); update(); }
+function cutList(){ return $('order').value === 'doc' ? order.slice().sort((a,b) => items[a].doc - items[b].doc) : order.slice(); }
+
+function update(){
+  items.forEach(it => it.el.classList.toggle('sel', order.includes(it.id)));
+  const list = cutList();
+  $('sCount').textContent = list.length;
+  $('sLen').textContent = f1(list.reduce((s,id) => s + items[id].lenMm, 0)/10);
+  $('sendBtn').disabled = $('saveBtn').disabled = !list.length;
+  const ol = $('list'); ol.innerHTML = '';
+  $('empty').hidden = !!list.length;
+  const manual = $('order').value === 'click';
+  list.forEach((id, k) => {
+    const li = document.createElement('li');
+    const it = items[id];
+    const tag = it.el.tagName.toLowerCase();
+    li.innerHTML = `<span class="n">${k+1}</span><span>${tag === 'path' ? 'Line' : tag[0].toUpperCase()+tag.slice(1)} <span class="len">${f1(it.lenMm)} mm</span></span><span class="ctl"></span>`;
+    const ctl = li.querySelector('.ctl');
+    const mk = (txt, label, fn, dis) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = txt; b.setAttribute('aria-label', label); b.disabled = !!dis; b.addEventListener('click', fn); ctl.appendChild(b); };
+    if (manual){
+      mk('↑', 'Move up', () => { const i = order.indexOf(id); if (i > 0){ [order[i-1], order[i]] = [order[i], order[i-1]]; update(); } }, k === 0);
+      mk('↓', 'Move down', () => { const i = order.indexOf(id); if (i < order.length-1){ [order[i+1], order[i]] = [order[i], order[i+1]]; update(); } }, k === list.length-1);
+    }
+    mk('×', 'Remove', () => remove([id]));
+    li.addEventListener('pointerenter', () => it.el.classList.add('hover'));
+    li.addEventListener('pointerleave', () => it.el.classList.remove('hover'));
+    ol.appendChild(li);
+  });
+  drawBadges();
+}
+
+function drawBadges(){
+  const g = svg && svg.querySelector('#qg-badges'); if (!g) return;
+  g.innerHTML = '';
+  const ctm = svg.getScreenCTM(); if (!ctm) return;
+  const px = 1 / ctm.a;           // one screen pixel in SVG units
+  cutList().forEach((id, k) => {
+    const it = items[id];
+    let p; try { p = it.el.getPointAtLength(0); } catch(e){ return; }
+    const q = toRoot(it.el).transformPoint(new DOMPoint(p.x, p.y));
+    const dot = document.createElementNS(NS, 'circle');
+    dot.setAttribute('cx', q.x); dot.setAttribute('cy', q.y); dot.setAttribute('r', 4*px); dot.setAttribute('class', 'qg-start');
+    const b = document.createElementNS(NS, 'g'); b.setAttribute('class', 'qg-badge');
+    const lab = String(k+1), w = (lab.length*8 + 8)*px, h = 17*px;
+    const r = document.createElementNS(NS, 'rect');
+    Object.entries({x:q.x + 6*px, y:q.y - h - 2*px, width:w, height:h, rx:3*px}).forEach(([a,v]) => r.setAttribute(a, v));
+    const t = document.createElementNS(NS, 'text');
+    Object.entries({x:q.x + 10*px, y:q.y - 6*px, 'font-size':12*px}).forEach(([a,v]) => t.setAttribute(a, v));
+    t.textContent = lab;
+    b.append(r, t); g.append(dot, b);
+  });
+}
+
+// ---------- view: zoom, pan, box select ----------
+function getVB(){ const v = svg.viewBox.baseVal; return {x:v.x, y:v.y, w:v.width, h:v.height}; }
+function setVB(v){ svg.setAttribute('viewBox', `${v.x} ${v.y} ${v.w} ${v.h}`); drawBadges(); }
+function toUser(cx, cy){ return new DOMPoint(cx, cy).matrixTransform(svg.getScreenCTM().inverse()); }
+function zoomAt(f, cx, cy){
+  if (!svg) return;
+  const r = stage.getBoundingClientRect();
+  if (cx == null){ cx = r.left + r.width/2; cy = r.top + r.height/2; }
+  const p = toUser(cx, cy), v = getVB();
+  const nw = Math.min(Math.max(v.w / f, vb0.w/200), vb0.w*4), k = nw / v.w;
+  setVB({x: p.x - (p.x - v.x)*k, y: p.y - (p.y - v.y)*k, w: nw, h: v.h*k});
+}
+function fit(){ if (!svg) return; const m = Math.max(vb0.w, vb0.h)*0.03; setVB({x:vb0.x - m, y:vb0.y - m, w:vb0.w + 2*m, h:vb0.h + 2*m}); }
+stage.addEventListener('wheel', e => { e.preventDefault(); zoomAt(Math.exp(-e.deltaY * 0.0015), e.clientX, e.clientY); }, {passive:false});
+$('zoomIn').addEventListener('click', () => zoomAt(1.4));
+$('zoomOut').addEventListener('click', () => zoomAt(1/1.4));
+$('fitBtn').addEventListener('click', fit);
+
+let spaceDown = false, drag = null, dragMoved = false;
+const panning = () => spaceDown || $('panBtn').getAttribute('aria-pressed') === 'true';
+function syncPanClass(){ stage.classList.toggle('pan', panning()); }
+$('panBtn').addEventListener('click', e => { const b = e.currentTarget; b.setAttribute('aria-pressed', String(b.getAttribute('aria-pressed') !== 'true')); syncPanClass(); });
+window.addEventListener('keydown', e => { if (e.code === 'Space' && !/INPUT|SELECT|TEXTAREA|BUTTON/.test(document.activeElement.tagName)){ e.preventDefault(); spaceDown = true; syncPanClass(); } });
+window.addEventListener('keyup', e => { if (e.code === 'Space'){ spaceDown = false; syncPanClass(); } });
+
+stage.addEventListener('pointerdown', e => {
+  if (!svg || e.button > 0) return;
+  dragMoved = false;
+  const onHit = e.target.classList && e.target.classList.contains('qg-hit');
+  if (panning() || e.button === 1){ drag = {mode:'pan', x:e.clientX, y:e.clientY, vb:getVB(), k:1/svg.getScreenCTM().a}; }
+  else if (!onHit){ drag = {mode:'box', x:e.clientX, y:e.clientY, remove:e.shiftKey}; }
+  else { drag = {mode:'click', x:e.clientX, y:e.clientY}; return; }
+  stage.setPointerCapture(e.pointerId);
+});
+stage.addEventListener('pointermove', e => {
+  if (!drag) return;
+  const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+  if (Math.hypot(dx, dy) > 4) dragMoved = true;
+  if (drag.mode === 'pan'){ setVB({x:drag.vb.x - dx*drag.k, y:drag.vb.y - dy*drag.k, w:drag.vb.w, h:drag.vb.h}); }
+  else if (drag.mode === 'box' && dragMoved){
+    let b = $('box'); if (!b){ b = document.createElement('div'); b.id = 'box'; stage.appendChild(b); }
+    const r = stage.getBoundingClientRect();
+    Object.assign(b.style, {left: Math.min(e.clientX, drag.x) - r.left + 'px', top: Math.min(e.clientY, drag.y) - r.top + 'px', width: Math.abs(dx) + 'px', height: Math.abs(dy) + 'px'});
+  }
+});
+stage.addEventListener('pointerup', e => {
+  if (!drag) return;
+  const d = drag; drag = null;
+  const b = $('box'); if (b) b.remove();
+  if (d.mode === 'box' && dragMoved){
+    const x0 = Math.min(e.clientX, d.x), x1 = Math.max(e.clientX, d.x), y0 = Math.min(e.clientY, d.y), y1 = Math.max(e.clientY, d.y);
+    const hits = items.filter(it => { const r = it.el.getBoundingClientRect(); return r.left >= x0-1 && r.right <= x1+1 && r.top >= y0-1 && r.bottom <= y1+1; })
+                      .sort((a,b) => a.doc - b.doc).map(it => it.id);
+    if (d.remove || e.shiftKey) remove(hits); else add(hits);
+  }
+  setTimeout(() => { dragMoved = false; }, 0);
+});
+let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(drawBadges, 100); });
+
+$('fillBtn').addEventListener('click', e => { const b = e.currentTarget, on = b.getAttribute('aria-pressed') !== 'true'; b.setAttribute('aria-pressed', String(on)); stage.classList.toggle('fills', on); });
+$('allBtn').addEventListener('click', () => add(items.slice().sort((a,b) => a.doc - b.doc).map(it => it.id)));
+$('noneBtn').addEventListener('click', () => { order = []; update(); });
+$('invBtn').addEventListener('click', () => { const was = new Set(order); order = items.slice().sort((a,b) => a.doc - b.doc).map(it => it.id).filter(id => !was.has(id)); update(); });
+$('order').addEventListener('change', update);
+
+// ---------- file input & drop ----------
+function readFile(file){ if (!file) return; const r = new FileReader(); r.onload = () => { load(r.result, file.name); fit(); }; r.readAsText(file); }
+$('file').addEventListener('change', e => readFile(e.target.files[0]));
+['dragenter','dragover'].forEach(ev => stage.addEventListener(ev, e => { e.preventDefault(); stage.classList.add('over'); }));
+['dragleave','drop'].forEach(ev => stage.addEventListener(ev, e => { e.preventDefault(); stage.classList.remove('over'); }));
+stage.addEventListener('drop', e => readFile(e.dataTransfer.files[0]));
+
+// ---------- output ----------
+function selectionSVG(){
+  const esc = s => String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+  const parts = cutList().map(id => {
+    const el = items[id].el, c = el.cloneNode(false);
+    ['id','class','style','fill','stroke','stroke-width','transform'].forEach(a => c.removeAttribute(a));
+    const m = toRoot(el);
+    c.setAttribute('transform', `matrix(${[m.a,m.b,m.c,m.d,m.e,m.f].map(v => +v.toFixed(6)).join(' ')})`);
+    return new XMLSerializer().serializeToString(c).replace(/ xmlns="[^"]*"/, '');
+  });
+  return `<svg xmlns="${NS}" width="${+(vb0.w*u).toFixed(4)}mm" height="${+(vb0.h*u).toFixed(4)}mm" viewBox="${vb0.x} ${vb0.y} ${vb0.w} ${vb0.h}">\n` +
+    `<!-- QikGLASS selection from ${esc(name || 'sample')}: ${parts.length} lines in cutting order -->\n` +
+    `<g fill="none" stroke="#000" stroke-width="${+(0.5/u).toFixed(4)}">\n${parts.join('\n')}\n</g>\n</svg>\n`;
+}
+const baseName = () => (name || 'sample').replace(/\.svg$/i, '').replace(/[^\w.-]+/g, '-');
+$('sendBtn').addEventListener('click', () => {
+  const payload = {svg: selectionSVG(), name: `${baseName()} (${cutList().length} selected).svg`, sheetW: vb0.w*u, t: Date.now()};
+  try { localStorage.setItem('qikglass-handoff', JSON.stringify(payload)); }
+  catch(e){ return setStatus('Your browser blocked the hand-off. Use “Download selection as SVG” and open that file on the G-code page instead.', true); }
+  location.href = 'index.html#gcode';
+});
+$('saveBtn').addEventListener('click', () => {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([selectionSVG()], {type:'image/svg+xml'}));
+  a.download = `${baseName()}-selected.svg`; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  setStatus(`Saved ${baseName()}-selected.svg.`);
+});
+function setStatus(t, bad){ const s = $('status'); s.textContent = t; s.className = bad ? 'warn' : 'status'; }
+
+load(SAMPLE, null);
+requestAnimationFrame(fit);
+})();
+</script>
+</body>
+</html>

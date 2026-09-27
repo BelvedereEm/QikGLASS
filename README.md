@@ -12,6 +12,7 @@ A spring-loaded, self-steering glass-scoring head that drops into the spindle cl
 | Path | What it is |
 |---|---|
 | `index.html` | **Pattern → G-code** tool plus the build and calibration guide. Open it in a browser (or via GitHub Pages). Drop in an SVG of score lines and save a `.nc` file for the controller. |
+| `select.html` | **Select parts**: open a full pattern SVG, click or box-select just the lines you want, set their cutting order, and send them to the G-code page |
 | `cad/qikglass_scoring_head.scad` | Parametric OpenSCAD source for all printed parts |
 | `stl/` | Printable parts at the default dimensions: body, cap, carrier, glass corner fence (print 2) |
 | `images/` | Renders |
@@ -51,7 +52,7 @@ Print in PETG or PLA+, 0.2 mm layers, 4 walls, 40 % infill. If the bearings are 
 1. Unplug the spindle, swap in the scoring head, and zero Z on the glass surface (paper-pinch test).
 2. Find **score depth** with a kitchen scale: jog down past first contact until it reads about 3 kg.
 3. Draw score lines in Inkscape (mm, page = sheet). Each line runs edge to edge or ends on an earlier score, and lines never cross.
-4. Load the SVG in `index.html`, check the warnings and numbered order, and save the `.nc` file.
+4. Load the SVG in `index.html`, check the warnings and numbered order, and save the `.nc` file. To cut only some lines from a bigger pattern, open it in `select.html` first, pick the lines, and choose **Send to QikGLASS**.
 5. Oil the wheel, run the file, and break in the numbered order.
 
 Full build, calibration and safety notes are in the page's **Build the head** and **Calibrate & score** tabs.
