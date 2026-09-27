@@ -31,6 +31,7 @@ body{margin:0}
   --grid:#1E2B29; --sheet:#1D3431; --relief:#C592DD; --margin:#35504B; --keep:#253222; --keep-ink:#A6D17E;
 }
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 body{background:var(--bg); color:var(--ink); font:16px/1.5 var(--body); padding-inline:16px; padding-block:0 48px}
 .wrap{max-width:1180px; margin:0 auto}
 header{display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:12px 24px; padding-block:28px 18px; border-bottom:1px solid var(--line)}
@@ -69,6 +70,12 @@ legend{font:600 12px var(--body); text-transform:uppercase; letter-spacing:.08em
 .row select{padding-right:6px; font-family:var(--body)}
 .unit span{position:absolute; right:8px; top:50%; transform:translateY(-50%); font:12px var(--mono); color:var(--muted); pointer-events:none}
 .btn{font:600 14px var(--body); border-radius:6px; padding:8px 14px; cursor:pointer; border:1px solid var(--line); background:var(--surface); color:var(--ink)}
+.wh{display:grid; grid-template-columns:1fr auto 1fr auto; gap:4px; align-items:center; font-size:13px; color:var(--muted)}
+.wh input{width:100%; min-width:0; font:14px var(--mono); padding:6px 6px; border:1px solid var(--line); border-radius:5px; background:var(--bg); color:var(--ink)}
+.wh select{font:13px var(--body); padding:6px 2px; border:1px solid var(--line); border-radius:5px; background:var(--bg); color:var(--ink)}
+.row.stack{grid-template-columns:1fr; gap:6px}
+.wh{max-width:260px}
+.leftover{display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; background:var(--keep); color:var(--keep-ink); border-radius:6px; padding:8px 10px; font-size:14px}
 .btn.primary{background:var(--accent); color:var(--accent-ink); border-color:var(--accent)}
 .btn:disabled{opacity:.5; cursor:not-allowed}
 .right{display:flex; flex-direction:column; gap:16px; min-width:0}
@@ -141,7 +148,10 @@ code{font:13.5px var(--mono); background:var(--sunk); padding:1px 5px; border-ra
 
       <fieldset>
         <legend>Glass piece</legend>
-        <div class="row"><label for="glass">Glass blank</label><select id="glass"><option value="6x4" selected>6 × 4 in</option><option value="4x6">4 × 6 in (tall)</option><option value="page">SVG page size</option></select></div>
+        <div class="row"><label for="glass">Glass blank</label><select id="glass"><option value="6x4" selected>6 × 4 in</option><option value="custom">Custom size</option><option value="page">SVG page size</option></select></div>
+        <div class="row stack" id="customRow" hidden><label for="cw">Width × height<small>Width runs along the front rail (X)</small></label>
+          <div class="wh"><input id="cw" type="number" step="0.05" min="0.5" value="6" aria-label="Glass width"><span>×</span><input id="ch" type="number" step="0.05" min="0.5" value="1.5" aria-label="Glass height"><select id="cunit" aria-label="Units"><option value="in" selected>in</option><option value="mm">mm</option></select></div></div>
+        <div class="leftover" id="leftoverBox" hidden><span id="leftoverTxt"></span><button class="btn" id="useLeftover" type="button">Use as next blank</button></div>
         <div class="row"><label for="layout">Layout<small>Packing keeps the leftover in one piece</small></label><select id="layout"><option value="nest" selected>Pack bottom-left</option><option value="keep">Keep as drawn</option></select></div>
         <div class="row" data-for="nest"><label for="gap">Gap between pieces<small>Room to score and break</small></label><div class="unit"><input id="gap" type="number" step="1" min="2" value="6"><span>mm</span></div></div>
         <div class="row" data-for="nest"><label for="turn">Turn pieces to fit<small>Say No for streaky glass with a grain direction</small></label><select id="turn"><option value="yes" selected>Yes</option><option value="no">No</option></select></div>
@@ -333,6 +343,7 @@ code{font:13.5px var(--mono); background:var(--sunk); padding:1px 5px; border-ra
       <ul>
         <li>Brush the felt clean, then push the blank firmly into the jig corner, 6 in side along the front rail. The corner notch leaves room for a chipped corner.</li>
         <li>Keep the scrap pad strip against its stop. Replace it when it's covered in scratches.</li>
+        <li>Any rectangle works in the jig, including the leftover strip from an earlier job. Set Glass blank to “Custom size” and type its width (along the front rail) and depth in inches or mm. After a job that saves a strip, “Use as next blank” fills the size in for you, and the page remembers it until next time. Glass wider than 160 mm hits the pad stop.</li>
         <li>Zero Z on the glass surface (paper pinch), then run the file.</li>
       </ul>
     </div>
@@ -554,7 +565,18 @@ function num(id){ const v = parseFloat($(id).value); return isFinite(v) ? v : 0;
 function f1(v){ return (Math.round(v*10)/10).toString(); }
 function f(v){ return (Math.round(v*1000)/1000).toFixed(3).replace(/\.?0+$/,'') || '0'; }
 
-const GLASS = {'6x4':[152.4,101.6], '4x6':[101.6,152.4]};
+const JIG = {maxW: 160, maxH: 170};   // pad stop on the jig sits at X162; Y travel limit
+function glassWH(g){
+  if (g === 'custom'){
+    const k = $('cunit').value === 'in' ? 25.4 : 1;
+    return [Math.max(12.7, num('cw')*k), Math.max(12.7, num('ch')*k)];
+  }
+  return [152.4, 101.6];
+}
+function glassName(g, W, H){
+  if (g === '6x4') return '6 × 4 in';
+  return $('cunit').value === 'in' ? `${+(W/25.4).toFixed(2)} × ${+(H/25.4).toFixed(2)} in` : `${f1(W)} × ${f1(H)} mm`;
+}
 const DENSITY = {light:{step:60, gap:14}, normal:{step:45, gap:10}, dense:{step:30, gap:7}};
 const DEG = Math.PI/180;
 function rotPts(p, rot){ return rot ? p.map(([x,y]) => [y, -x]) : p; }
@@ -761,7 +783,10 @@ function build(){
     contact = contact.map(p => p.map(([x,y]) => [x-ox, y-oy]));
     sheet = {x:pb.x0-ox, y:pb.y0-oy, w:pb.x1-pb.x0, h:pb.y1-pb.y0};
   } else {
-    const [W, H] = GLASS[o.glass];
+    const [W, H] = glassWH(o.glass);
+    if (W > JIG.maxW) warns.push(`This glass is ${f1(W)} mm wide. The jig's pad stop is at 162 mm, so glass wider than ${JIG.maxW} mm hits it. Take the pad scrap out and set Pre-align to Off, or trim the glass.`);
+    if (H > JIG.maxH) warns.push(`This glass is ${f1(H)} mm deep, more than the 3018 can reach from the jig corner. Trim it to ${JIG.maxH} mm or less.`);
+    if (W < 2*o.margin + 5 || H < 2*o.margin + 5) warns.push('This glass is too small for the edge margin. Lower the margin or use a bigger piece.');
     if (nest && contact.length){
       const res = packPieces(contact.map(p => dedupe(p)), W, H, o);
       res.tooBig.forEach(t => warns.push(t));
@@ -779,7 +804,7 @@ function build(){
       const bw = b.x1-b.x0, bh = b.y1-b.y0, iw = W-2*o.margin, ih = H-2*o.margin;
       if (bw > iw + 0.05 || bh > ih + 0.05){
         const fitsTurned = bh <= iw && bw <= ih;
-        warns.push(`The pattern is ${f1(bw)} × ${f1(bh)} mm, but a ${o.glass === '6x4' ? '6 × 4' : '4 × 6'} in blank only holds ${f1(iw)} × ${f1(ih)} mm inside the ${f1(o.margin)} mm margin. ${fitsTurned ? 'Rotating it 90° makes it fit.' : 'Use “Fit pattern to glass”, or select fewer lines.'}`);
+        warns.push(`The pattern is ${f1(bw)} × ${f1(bh)} mm, but a ${glassName(o.glass, W, H)} blank only holds ${f1(iw)} × ${f1(ih)} mm inside the ${f1(o.margin)} mm margin. ${fitsTurned ? 'Rotating it 90° makes it fit.' : 'Use “Fit pattern to glass”, or select fewer lines.'}`);
       }
     }
     sheet = {x:0, y:0, w:W, h:H};
@@ -860,7 +885,7 @@ function build(){
   const g = [];
   g.push('(QikGLASS scoring job - generated ' + new Date().toISOString().slice(0,10) + ')');
   g.push(`(Scores: ${scores.length} incl. ${rn} relief  depth: -${f(o.depth)}  feed: ${f(o.feed)}  caster: ${f(o.r)} mm)`);
-  g.push(o.glass === 'page' ? '(Glass: SVG page size)' : `(Glass blank: ${o.glass === '6x4' ? '6 x 4' : '4 x 6'} in = ${f(W)} x ${f(H)} mm)`);
+  g.push(o.glass === 'page' ? '(Glass: SVG page size)' : `(Glass blank: ${glassName(o.glass, W, H).replace(/×/g,'x')} = ${f(W)} x ${f(H)} mm, front-left corner in the jig)`);
   g.push('(Z0 = glass surface. X0 Y0 = ' + (o.glass !== 'page' ? 'glass blank front-left corner' : o.origin==='sheet' ? 'sheet front-left corner' : 'drawing front-left') + ')');
   if (pack) g.push(`(Blank ${pack.k+1} of ${pack.n}: ${pack.count} piece${pack.count===1?'':'s'} packed from the front-left corner)`);
   if (trimY != null) g.push(`(Score T is the trim line at Y${f(trimY)}. Break it first and keep the ${f1(W)} x ${f1(H - trimY)} mm strip.)`);
@@ -900,13 +925,14 @@ function build(){
 // ---------- render ----------
 function render(){
   $('gcode').value = job.gcode;
+  showLeftover();
   const st = [
     [job.scores.length - job.reliefs + (job.reliefs ? ' + ' + job.reliefs + 'R' : ''), job.reliefs ? 'scores + relief' : 'scores'],
     ...(job.pack ? [[`${job.pack.k+1} / ${job.pack.n}`, 'blank']] : []),
     ...(job.trimY != null ? [[f1(job.sheet.h - job.trimY) + ' mm', 'leftover strip']] : []),
     [(job.scoreLen/10).toFixed(1) + ' cm', 'total score length'],
     ['≈ ' + Math.max(1, Math.round(job.mins)) + ' min', 'run time'],
-    [job.o.glass === 'page' ? f1(job.sheet.w) + ' × ' + f1(job.sheet.h) : (job.o.glass === '6x4' ? '6 × 4' : '4 × 6'), job.o.glass === 'page' ? 'sheet, mm' : 'glass, in'],
+    [job.o.glass === 'page' ? f1(job.sheet.w) + ' × ' + f1(job.sheet.h) : glassName(job.o.glass, job.sheet.w, job.sheet.h).replace(/ (in|mm)$/, ''), job.o.glass === 'page' ? 'sheet, mm' : 'glass, ' + (job.o.glass === '6x4' || $('cunit').value === 'in' ? 'in' : 'mm')],
   ];
   $('stats').innerHTML = st.map(([b,s]) => `<div class="stat"><b>${b}</b><span>${s}</span></div>`).join('');
   const w = $('warns'); w.innerHTML = '';
@@ -974,7 +1000,7 @@ function load(text, name){
     $('blank').innerHTML = '<option value="0">1 of 1</option>';
     fileBase = (name || 'glass-scores').replace(/\.svg$/i,'').replace(/[^\w.-]+/g,'-') || 'glass-scores';
     $('fname').textContent = name ? `${name} · ${src.paths.length} line${src.paths.length===1?'':'s'}` : 'Sample: 2 pieces on a 6 × 4 in blank';
-    $('padx').value = +(glassSize()[0] + 27).toFixed(1);
+    setPadDefault();
     build();
   } catch(e){
     $('warns').innerHTML = ''; const d = document.createElement('div'); d.className = 'warn'; d.textContent = e.message; $('warns').appendChild(d);
@@ -987,13 +1013,34 @@ const drop = $('drop');
 ['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
 drop.addEventListener('drop', e => readFile(e.dataTransfer.files[0]));
 $('sampleBtn').addEventListener('click', () => { load(SAMPLE, null); });
-function glassSize(){ const g = $('glass').value; return g === 'page' ? (src ? [src.sheet.w*num('scale')/100, src.sheet.h*num('scale')/100] : [200,150]) : GLASS[g]; }
-$('glass').addEventListener('change', () => { $('padx').value = +(glassSize()[0] + 27).toFixed(1); build(); });
+function glassSize(){ const g = $('glass').value; return g === 'page' ? (src ? [src.sheet.w*num('scale')/100, src.sheet.h*num('scale')/100] : [200,150]) : glassWH(g); }
+// the pad lives on the jig, so its position only changes when there is no jig (SVG page mode)
+function setPadDefault(){ if ($('glass').value === 'page'){ $('padx').value = +(glassSize()[0] + 27).toFixed(1); $('pady').value = 20; } else { $('padx').value = 179.4; $('pady').value = 10; } }
+function syncGlassUI(){ $('customRow').hidden = $('glass').value !== 'custom'; }
+$('glass').addEventListener('change', () => { syncGlassUI(); setPadDefault(); build(); });
+$('cunit').addEventListener('change', () => {
+  const k = $('cunit').value === 'in' ? 1/25.4 : 25.4, dp = $('cunit').value === 'in' ? 2 : 1;
+  ['cw','ch'].forEach(id => $(id).value = +(num(id)*k).toFixed(dp)); build();
+});
+function showLeftover(){
+  let lo = null; try { lo = JSON.parse(localStorage.getItem('qg-leftover') || 'null'); } catch(e){}
+  if (job && job.trimY != null) lo = [job.sheet.w, job.sheet.h - job.trimY];
+  $('leftoverBox').hidden = !lo;
+  if (lo){ $('leftoverTxt').textContent = `Leftover ${job && job.trimY != null ? 'from this job' : 'from your last job'}: ${+(lo[0]/25.4).toFixed(2)} × ${+(lo[1]/25.4).toFixed(2)} in`; $('useLeftover').dataset.w = lo[0]; $('useLeftover').dataset.h = lo[1]; }
+}
+$('useLeftover').addEventListener('click', e => {
+  const w = +e.currentTarget.dataset.w, hh = +e.currentTarget.dataset.h, inch = $('cunit').value === 'in';
+  $('glass').value = 'custom'; syncGlassUI(); setPadDefault();
+  $('cw').value = inch ? +(w/25.4).toFixed(2) : +w.toFixed(1); $('ch').value = inch ? +(hh/25.4).toFixed(2) : +hh.toFixed(1);
+  try { localStorage.removeItem('qg-leftover'); } catch(err){}
+  build();
+  $('status').textContent = 'Glass set to the leftover strip. Load the next pattern, push the strip into the jig corner, and zero Z on it.';
+});
 $('blank').addEventListener('change', build);
 $('fitBtn').addEventListener('click', () => {
   if (!src || !src.paths.length) return;
   const g = $('glass').value; if (g === 'page') return;
-  const [W, H] = GLASS[g], m = Math.max(0, num('margin'));
+  const [W, H] = glassWH(g), m = Math.max(0, num('margin'));
   const b = bbox(rotPts(src.paths.flatMap(p => p.pts), $('rot').value === '90'));
   const k = Math.min((W-2*m)/(b.x1-b.x0 || 1), (H-2*m)/(b.y1-b.y0 || 1));
   $('scale').value = Math.floor(k*100); build();
@@ -1005,10 +1052,11 @@ new MutationObserver(draw).observe(document.documentElement, {attributes:true, a
 
 // ---------- copy / save ----------
 $('copyBtn').addEventListener('click', () => {
-  const done = () => $('status').textContent = 'G-code copied.';
+  const done = () => { $('status').textContent = 'G-code copied.'; rememberLeftover(); };
   const fallback = () => { const t = $('gcode'); t.focus(); t.select(); $('status').textContent = 'Text selected. Press Ctrl+C (⌘C) to copy.'; };
   try { navigator.clipboard.writeText(job.gcode).then(done, fallback); } catch(e){ fallback(); }
 });
+function rememberLeftover(){ if (job && job.trimY != null) try { localStorage.setItem('qg-leftover', JSON.stringify([job.sheet.w, job.sheet.h - job.trimY])); } catch(e){} }
 let downloads = null, ext = '.txt';
 if (window.claude && claude.use) claude.use('downloads').then(d => { downloads = d; $('saveBtn').hidden = !d; }).catch(() => {});
 else {
@@ -1027,6 +1075,7 @@ $('saveBtn').addEventListener('click', async () => {
   try {
     const suffix = job.pack && job.pack.n > 1 ? `-blank${job.pack.k+1}` : '';
     await downloads.save({filename: fileBase + suffix + '-score' + ext, data: job.gcode});
+    rememberLeftover();
     $('status').textContent = ext === '.nc' ? `Saved ${fileBase}${suffix}-score.nc.` : `Saved ${fileBase}-score.txt. Rename it to .nc if your offline controller doesn't list .txt files.`;
   } catch(e){
     $('status').textContent = e && e.code === 'declined' ? 'Save cancelled.' : 'Saving isn’t available here. Use Copy and paste into a text file instead.';
@@ -1042,7 +1091,8 @@ try { handoff = JSON.parse(localStorage.getItem('qikglass-handoff') || 'null'); 
 if (handoff && handoff.svg && Date.now() - (handoff.t||0) < 30*60*1000){
   load(handoff.svg, handoff.name || 'selection.svg');
   start = 'gcode';
-} else load(SAMPLE, null);
+} else syncGlassUI();
+load(SAMPLE, null);
 showTab(['gcode','build','run'].includes(start) ? start : 'gcode');
 })();
 </script>
