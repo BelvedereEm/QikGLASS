@@ -42,8 +42,21 @@ fence_h = 2.0;    // keep BELOW your glass thickness
 fence_arm = 60;
 fence_w = 12;
 
+/* [6x4 glass jig] */
+glass_w = 152.4;  // 6 in, always laid horizontally (along X)
+glass_h = 101.6;  // 4 in
+felt_t = 2.0;     // thickness of the felt/cork the glass sits on
+jig_rail = 10;    // rail width
+pad_w = 30;       // scrap glass for the wheel-alignment pad
+pad_h = 20;
+// jig rail height: above the felt, below the top of 3 mm glass
+jig_h = felt_t + 1.5;
+
+/* [Zero pointer] */
+pointer_len = 39; // carrier height + how far the cutter head sticks out below it
+
 /* [Output] */
-part = "all"; // [all, body, cap, carrier, fence]
+part = "all"; // [all, body, cap, carrier, fence, jig, pointer]
 
 $fn = 96;
 eps = 0.01;
@@ -116,10 +129,53 @@ module fence() {
     }
 }
 
+// 6x4 glass jig. Origin (0,0) = the inside corner = the glass blank's front-left corner = G-code X0 Y0.
+// The front rail runs on to the right and holds a scrap strip for the wheel-alignment pad.
+module jig() {
+    L = glass_w + 12 + pad_w + 6;          // front rail length past the corner
+    stub_x = glass_w + 10;                 // 2 mm stop the pad scrap sits against
+    difference() {
+        union() {
+            translate([-jig_rail, -jig_rail, 0]) cube([L + jig_rail, jig_rail, jig_h]);            // front rail (along X)
+            translate([-jig_rail, -jig_rail, 0]) cube([jig_rail, glass_h + 8 + jig_rail, jig_h]);  // left rail (along Y)
+            translate([stub_x, 0, 0]) cube([2, 8, jig_h]);                                         // pad stop
+        }
+        // relief in the inside corner so a chipped glass corner still seats
+        translate([0, 0, -eps]) cylinder(r = 2, h = jig_h + 2 * eps, $fn = 24);
+        // countersunk holes for wood screws into the spoilboard
+        for (x = [20, 80, 140, L - 12]) translate([x, -jig_rail / 2, 0]) screw_hole();
+        for (y = [30, 90]) translate([-jig_rail / 2, y, 0]) screw_hole();
+        // engraved marks: X0 Y0 at the corner, pad centre on the front rail
+        translate([1.5, -jig_rail + 1.5, jig_h - 0.6]) linear_extrude(1) text("X0Y0", size = 3.5, font = "Liberation Sans:style=Bold");
+        translate([stub_x + 2 + pad_w / 2, -jig_rail / 2, jig_h - 0.6]) cube([0.8, jig_rail - 3, 1], center = true);
+    }
+}
+module screw_hole() {
+    translate([0, 0, -eps]) cylinder(d = 3.8, h = jig_h + 2 * eps);
+    translate([0, 0, jig_h - 1.8]) cylinder(d1 = 3.8, d2 = 7.5, h = 1.8 + eps);
+}
+
+// Zero pointer: swap it onto the shaft in place of the carrier. Its tip is exactly on the
+// pivot axis, which is the point the G-code positions, so you can touch off the jig corner.
+module pointer() {
+    tip_len = 15;
+    difference() {
+        union() {
+            translate([0, 0, tip_len]) cylinder(d = carrier_d, h = pointer_len - tip_len);
+            cylinder(d1 = 1, d2 = carrier_d, h = tip_len);
+        }
+        translate([0, 0, pointer_len - shaft_depth]) cylinder(d = shaft_d + 0.2, h = shaft_depth + eps);
+        translate([0, 0, pointer_len - 2]) cylinder(d = spring_od + 1, h = 2 + eps);
+        translate([0, 0, pointer_len - shaft_depth / 2 - 1]) rotate([90, 0, 0]) cylinder(d = m3_tap, h = carrier_d);
+    }
+}
+
 if (part == "body") body();
 else if (part == "cap") cap();
 else if (part == "carrier") carrier();
 else if (part == "fence") fence();
+else if (part == "jig") jig();
+else if (part == "pointer") pointer();
 else {
     // exploded assembly preview
     color("SteelBlue") body();

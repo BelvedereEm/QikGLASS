@@ -176,8 +176,8 @@ code{font:13.5px var(--mono); background:var(--sunk); padding:1px 5px; border-ra
         <legend>Swivel wheel</legend>
         <div class="row"><label for="caster">Caster offset<small>Match <code>caster</code> in the CAD file</small></label><div class="unit"><input id="caster" type="number" step="0.1" value="1.5"><span>mm</span></div></div>
         <div class="row"><label for="align">Pre-align wheel<small>Short stroke on a scrap pad before each score</small></label><select id="align"><option value="pad" selected>On pad</option><option value="none">Off</option></select></div>
-        <div class="row"><label for="padx">Pad X</label><div class="unit"><input id="padx" type="number" step="1" value="177"><span>mm</span></div></div>
-        <div class="row"><label for="pady">Pad Y</label><div class="unit"><input id="pady" type="number" step="1" value="20"><span>mm</span></div></div>
+        <div class="row"><label for="padx">Pad X</label><div class="unit"><input id="padx" type="number" step="0.5" value="179.4"><span>mm</span></div></div>
+        <div class="row"><label for="pady">Pad Y</label><div class="unit"><input id="pady" type="number" step="0.5" value="10"><span>mm</span></div></div>
         <div class="row"><label for="stroke">Pad stroke</label><div class="unit"><input id="stroke" type="number" step="1" value="8"><span>mm</span></div></div>
       </fieldset>
 
@@ -269,7 +269,9 @@ code{font:13.5px var(--mono); background:var(--sunk); padding:1px 5px; border-ra
             <tr><td>Body</td><td>Upright, bearing bore opening up</td><td><code>qikglass_body.stl</code></td></tr>
             <tr><td>Cap</td><td>Flat, countersinks up</td><td><code>qikglass_cap.stl</code></td></tr>
             <tr><td>Carrier</td><td>Head pocket down on the bed</td><td><code>qikglass_carrier.stl</code></td></tr>
-            <tr><td>Glass corner fence (×2)</td><td>Flat</td><td><code>qikglass_fence.stl</code></td></tr>
+            <tr><td>6 × 4 glass jig</td><td>Flat, needs a bed at least 215 mm wide</td><td><code>qikglass_jig.stl</code></td></tr>
+            <tr><td>Zero pointer</td><td>Point up</td><td><code>qikglass_pointer.stl</code></td></tr>
+            <tr><td>Small corner fences (×2, optional)</td><td>Flat. Use instead of the jig on a smaller printer</td><td><code>qikglass_fence.stl</code></td></tr>
           </tbody>
         </table></div>
         <p class="muted">PETG or PLA+, 0.2 mm layers, 4 walls, 40% infill. If the bearings are loose or won't press in, change <code>lm_fit</code> by 0.05 mm and reprint the body.</p>
@@ -311,12 +313,27 @@ code{font:13.5px var(--mono); background:var(--sunk); padding:1px 5px; border-ra
 <section class="tab" id="tab-run" hidden>
   <div class="prose" style="max-width:72ch">
     <div class="block">
-      <h2>Set up the bed</h2>
+      <h2>Put every blank in the same place</h2>
+      <p>The G-code always puts X0 Y0 at the blank's front-left corner, with the 6 in side running along X. Two things keep that repeatable: a jig that doesn't move, and a quick zeroing routine each time the machine is switched on.</p>
+      <h3>Fit the jig once</h3>
+      <ol>
+        <li>Screw a flat MDF spoilboard to the bed and glue 2 mm felt or cork where the glass will sit. Set <code>felt_t</code> in the CAD file to your felt thickness. The jig rails then stand 1.5 mm above the felt, which is high enough to stop the glass but lower than 3 mm glass, so the wheel never touches them.</li>
+        <li>Print <code>qikglass_jig.stl</code>. It's an L-shaped corner stop for a 6 × 4 blank lying flat, with its long rail along X. The rail continues to the right and has a small stop for a 30 × 20 mm scrap of the same glass, which is the wheel-alignment pad. The pad's centre is marked, and it sits at X179.4 Y10, the page's default Pad X and Pad Y.</li>
+        <li>Place the jig at the front-left of the work area, leaving at least 20 mm of travel below X0 and Y0.</li>
+        <li>Square it to the machine: fit the zero pointer (below), lower it just above the front rail's inside edge, and jog along X. Tap the jig until the tip follows the edge along its whole length, then screw it down with small countersunk wood screws.</li>
+      </ol>
+      <h3>Zero X and Y</h3>
+      <p>The 3018 doesn't know where it is when it's switched on, so X0 Y0 has to be set at the jig corner. There are two ways to do it.</p>
+      <ol>
+        <li><b>Zero pointer (any time, most accurate):</b> loosen the carrier's screw, slide the carrier off the shaft and push on <code>qikglass_pointer.stl</code>. Its tip sits exactly on the pivot axis, which is the point the G-code moves. Jog the tip into the jig's inside corner, just above the felt, and press the controller's XY zero (or send <code>G10 L20 P1 X0 Y0</code>). Swap the carrier back on and zero Z on the glass as usual.</li>
+        <li><b>Park and power off (quick):</b> every QikGLASS file ends with the head parked at X0 Y0. Switch the machine off there, don't move the gantry by hand, and after switching on just press XY zero. Check it with the pointer every few sessions, or after anything bumps the machine.</li>
+      </ol>
+      <p class="muted">If your 3018 has limit switches, you can turn on homing (<code>$22=1</code>) and save the jig corner as a permanent work offset with <code>G10 L2 P1</code>. Then <code>$H</code> at power-up restores it with no touching off. This is optional. The routine above works without switches.</p>
+      <h3>Every blank</h3>
       <ul>
-        <li>Screw a flat MDF board to the bed and glue 2–3 mm felt or cork on top. Glass on bare aluminium rocks and cracks under pressure.</li>
-        <li>Screw the two printed fences on as a front-left corner stop. They're 2 mm tall so they stay below 3 mm glass. Push the sheet into the corner.</li>
-        <li>Put a scrap strip of the <b>same glass</b> on the bed as the alignment pad, and enter its centre as Pad X / Pad Y. Before each score the wheel takes a short stroke there, so it's already pointing the right way when it touches your sheet.</li>
-        <li>Set X0 Y0 at the sheet's front-left corner (or wherever you set the Work zero option).</li>
+        <li>Brush the felt clean, then push the blank firmly into the jig corner, 6 in side along the front rail. The corner notch leaves room for a chipped corner.</li>
+        <li>Keep the scrap pad strip against its stop. Replace it when it's covered in scratches.</li>
+        <li>Zero Z on the glass surface (paper pinch), then run the file.</li>
       </ul>
     </div>
 
@@ -957,7 +974,7 @@ function load(text, name){
     $('blank').innerHTML = '<option value="0">1 of 1</option>';
     fileBase = (name || 'glass-scores').replace(/\.svg$/i,'').replace(/[^\w.-]+/g,'-') || 'glass-scores';
     $('fname').textContent = name ? `${name} · ${src.paths.length} line${src.paths.length===1?'':'s'}` : 'Sample: 2 pieces on a 6 × 4 in blank';
-    $('padx').value = Math.round(glassSize()[0] + 25);
+    $('padx').value = +(glassSize()[0] + 27).toFixed(1);
     build();
   } catch(e){
     $('warns').innerHTML = ''; const d = document.createElement('div'); d.className = 'warn'; d.textContent = e.message; $('warns').appendChild(d);
@@ -971,7 +988,7 @@ const drop = $('drop');
 drop.addEventListener('drop', e => readFile(e.dataTransfer.files[0]));
 $('sampleBtn').addEventListener('click', () => { load(SAMPLE, null); });
 function glassSize(){ const g = $('glass').value; return g === 'page' ? (src ? [src.sheet.w*num('scale')/100, src.sheet.h*num('scale')/100] : [200,150]) : GLASS[g]; }
-$('glass').addEventListener('change', () => { $('padx').value = Math.round(glassSize()[0] + 25); build(); });
+$('glass').addEventListener('change', () => { $('padx').value = +(glassSize()[0] + 27).toFixed(1); build(); });
 $('blank').addEventListener('change', build);
 $('fitBtn').addEventListener('click', () => {
   if (!src || !src.paths.length) return;

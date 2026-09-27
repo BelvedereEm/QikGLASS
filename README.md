@@ -15,7 +15,7 @@ A spring-loaded, self-steering glass-scoring head that drops into the spindle cl
 | `trace.html` | **PNG → SVG**: open a picture of a pattern (black lines on white), set its real size, and trace every enclosed area into a piece outline. Flags pieces that won't fit a 6 × 4 in blank. |
 | `select.html` | **Select parts**: open a full pattern SVG, click or box-select just the lines you want, set their cutting order, and send them to the G-code page |
 | `cad/qikglass_scoring_head.scad` | Parametric OpenSCAD source for all printed parts |
-| `stl/` | Printable parts at the default dimensions: body, cap, carrier, glass corner fence (print 2) |
+| `stl/` | Printable parts at the default dimensions: body, cap, carrier, 6 × 4 glass jig, zero pointer, and small corner fences for smaller printers |
 | `images/` | Renders |
 
 ## How it works
@@ -47,6 +47,12 @@ The defaults are estimates. Set these at the top of the `.scad` file, then expor
 | – | MDF board + 2–3 mm felt or cork bed, glass cutting oil, kitchen scale |
 
 Print in PETG or PLA+, 0.2 mm layers, 4 walls, 40 % infill. If the bearings are loose or tight, tune `lm_fit`.
+
+## Putting the glass in the same place every time
+
+- **Jig:** `qikglass_jig.stl` is an L-shaped corner stop screwed to the spoilboard. The 6 × 4 blank always goes in horizontally, 6 in along X, pushed into the corner. The inside corner is **X0 Y0** for every G-code file. The front rail also holds a 30 × 20 mm scrap strip for the wheel-alignment pad at X179.4 Y10, which matches the page's defaults. Rail height is felt thickness + 1.5 mm (`felt_t` in the CAD file), so it stops the glass without touching the wheel.
+- **Squaring:** jog along the front rail with the zero pointer and tap the jig straight before screwing it down.
+- **Zeroing after power-up:** the 3018 has no position memory without homing. Either swap the carrier for `qikglass_pointer.stl` (its tip is on the pivot axis), jog it into the jig corner and zero XY, or rely on park-and-power-off: every file ends at X0 Y0, so power off there and zero XY after switching back on. With limit switches you can also enable homing and store the corner as a G54 offset.
 
 ## Packing pieces to save glass
 
