@@ -52,7 +52,7 @@ section.tab{padding-top:24px}
 
 /* G-code tool */
 .tool{display:grid; grid-template-columns:330px 1fr; gap:20px; align-items:start}
-@media (max-width:880px){ .tool{grid-template-columns:1fr} }
+@media (max-width:880px){ .tool{grid-template-columns:minmax(0,1fr)} }
 .panel{background:var(--surface); border:1px solid var(--line); border-radius:8px}
 .controls{padding:16px; display:flex; flex-direction:column; gap:18px}
 .load{display:flex; flex-direction:column; gap:8px}
@@ -96,7 +96,7 @@ textarea{display:block; width:100%; height:240px; border:0; border-radius:0 0 8p
 
 /* Guides */
 .guide{display:grid; grid-template-columns:minmax(0,1fr) 320px; gap:32px; align-items:start}
-@media (max-width:880px){ .guide{grid-template-columns:1fr} }
+@media (max-width:880px){ .guide{grid-template-columns:minmax(0,1fr)} }
 .prose{display:flex; flex-direction:column; gap:28px; max-width:70ch}
 .block{display:flex; flex-direction:column; gap:10px}
 .prose ol, .prose ul{margin:0; padding-left:22px; display:flex; flex-direction:column; gap:7px}
@@ -122,7 +122,7 @@ code{font:13.5px var(--mono); background:var(--sunk); padding:1px 5px; border-ra
 <header>
   <div>
     <h1>Qik<span>GLASS</span> scoring head</h1>
-    <p class="spec">3018-PRO · GRBL · QWORK carbide wheel · 6 × 4 in glass</p>
+    <p class="spec">3018-PRO / PRO-MAX · GRBL · QWORK carbide wheel · 6 × 4 in glass</p>
   </div>
   <nav role="tablist" aria-label="Sections">
     <a class="navlink" href="trace.html">PNG → SVG</a>
@@ -178,7 +178,7 @@ code{font:13.5px var(--mono); background:var(--sunk); padding:1px 5px; border-ra
 
       <fieldset>
         <legend>Speeds</legend>
-        <div class="row"><label for="feed">Score feed</label><div class="unit"><input id="feed" type="number" step="50" value="1200"><span>/min</span></div></div>
+        <div class="row"><label for="feed">Score feed<small>Your 3018 tops out at 1000 ($110)</small></label><div class="unit"><input id="feed" type="number" step="50" value="900"><span>/min</span></div></div>
         <div class="row"><label for="plunge">Touch-down feed</label><div class="unit"><input id="plunge" type="number" step="10" value="150"><span>/min</span></div></div>
       </fieldset>
 
@@ -239,36 +239,37 @@ code{font:13.5px var(--mono); background:var(--sunk); padding:1px 5px; border-ra
     <div class="prose">
       <div class="block">
         <h2>How the head works</h2>
-        <p>The printed body drops into the spindle clamp where the 775 motor sits. An 8 mm steel shaft runs through two LM8UU linear bearings, so it can slide up and down and spin freely. A compression spring under the body pushes the shaft down. That spring, not the Z motor, sets the scoring pressure, so small differences in bed or glass height barely change the force.</p>
-        <p>The QWORK cutter head is unscrewed from its handle and clamped into the carrier at the bottom of the shaft, 1.5 mm off-centre. The wheel trails behind the pivot like a shopping-cart caster and steers itself around curves. The G-code generator shifts every path by that offset so the wheel lands on your line.</p>
+        <p>The head is five printed parts plus the QWORK cutter head. There's nothing else: no rod, bearing, metal spring, screw or clip.</p>
+        <ul>
+          <li><b>Body:</b> sits in the spindle clamp. Its long bushing at the bottom keeps the shaft upright.</li>
+          <li><b>Shaft:</b> drops in from the top. A flange stops it on the body's inner lip, so nothing has to hold it in. Its domed top is the swivel: only the centre of the dome carries the load, so it spins almost freely even under 3–5 kg, and that free spin lets the wheel steer. The split collet that holds the cutter is printed on its bottom end.</li>
+          <li><b>Spring:</b> a printed tube with staggered slots, whose rings bend like a stack of leaf springs. Its solid foot sits on the shaft's dome. It comes in three strengths (below).</li>
+          <li><b>Cap:</b> screws onto the top of the body and presses on the spring. This is the pressure adjustment. Each of its 12 grip flutes is 1/12 turn, or 0.25 mm.</li>
+          <li><b>Nut:</b> screws up the collet and grips the QWORK head, which sits 1.5 mm off-centre. The wheel trails behind the swivel like a shopping-cart caster, and the G-code page shifts every path by that offset.</li>
+        </ul>
       </div>
 
       <div class="block">
         <h2>Measure two things first</h2>
-        <p>I couldn't confirm either size from the product listings. Measure both with calipers, enter them at the top of <code>qikglass_scoring_head.scad</code>, then export the STLs from free OpenSCAD. The included STLs use the defaults shown.</p>
+        <p>Measure both with calipers, enter them at the top of <code>qikglass_scoring_head.scad</code>, then export the STLs from free OpenSCAD. The included STLs use the defaults shown.</p>
         <div class="measure">
-          <div><h3>Clamp bore</h3><p class="muted">Take the spindle out and measure the motor body where the clamp grips it. A bare 775 is about 42 mm. If the clamp grips the steel flux ring, it's about 45.5 mm.</p><p><code>clamp_d = 42.0</code></p></div>
-          <div><h3>Cutter-head shank</h3><p class="muted">Loosen the small screw on the handle (the kit's screwdriver fits), pull a head out, and measure the round part that sat inside the handle.</p><p><code>head_shank_d = 7.0</code></p></div>
+          <div><h3>Clamp bore</h3><p class="muted">Take the spindle out and measure the motor where the clamp grips it. A bare 775 is about 42 mm. Across its steel flux ring it's about 45.5 mm. Only the body changes.</p><p><code>clamp_d = 42.0</code></p></div>
+          <div><h3>Cutter-head shank</h3><p class="muted">Loosen the small screw on the handle, pull a head out, and measure the round part that sat inside the handle. Only the shaft changes.</p><p><code>head_shank_d = 7.0</code></p></div>
         </div>
       </div>
 
       <div class="block">
-        <h2>Parts list</h2>
+        <h2>Spring strength</h2>
+        <p>Print the medium spring first. These figures are estimates for PETG. Your printer and filament will shift them, so always check with the kitchen scale (see <em>Calibrate &amp; score</em>).</p>
         <div class="tablewrap"><table>
-          <thead><tr><th>Qty</th><th>Part</th><th>Notes</th></tr></thead>
+          <thead><tr><th>Spring</th><th>File</th><th>About</th><th>Max before it bottoms out</th><th>Use for</th></tr></thead>
           <tbody>
-            <tr><td class="q">2</td><td>LM8UU linear bearing</td><td>15 mm OD × 24 mm, for an 8 mm shaft</td></tr>
-            <tr><td class="q">1</td><td>8 mm hardened steel rod, 100 mm</td><td>Linear rod or a cut 3D-printer rod</td></tr>
-            <tr><td class="q">1</td><td>8 mm shaft collar with set screw</td><td>Stops the shaft and sets spring preload</td></tr>
-            <tr><td class="q">1</td><td>Compression spring</td><td>ID 9 mm or more, OD 13 mm or less, free length 25–30 mm, wire 1.0–1.2 mm. An assortment box lets you tune.</td></tr>
-            <tr><td class="q">3</td><td>M3 × 8 countersunk screw</td><td>Cap to body</td></tr>
-            <tr><td class="q">2</td><td>M3 × 10 socket screw</td><td>Carrier clamps (self-tap into the plastic)</td></tr>
-            <tr><td class="q">1</td><td>QWORK cutter head</td><td>The 2–6 mm head for 3 mm stained glass</td></tr>
-            <tr><td class="q">1</td><td>MDF board + 2–3 mm felt or cork</td><td>Flat, slightly soft bed under the glass</td></tr>
-            <tr><td class="q">1</td><td>Kitchen scale</td><td>For setting pressure</td></tr>
-            <tr><td class="q">—</td><td>Glass cutting oil</td><td>The head alone has no reservoir</td></tr>
+            <tr><td>Soft (S)</td><td><code>qikglass_spring_soft.stl</code></td><td class="q">0.5 kg/mm</td><td class="q">≈ 2 kg</td><td>Thin or soft glass, testing</td></tr>
+            <tr><td>Medium (M)</td><td><code>qikglass_spring_medium.stl</code></td><td class="q">0.9 kg/mm</td><td class="q">≈ 3.8 kg</td><td>Most 3 mm stained glass</td></tr>
+            <tr><td>Firm (F)</td><td><code>qikglass_spring_firm.stl</code></td><td class="q">1.6 kg/mm</td><td class="q">≈ 4.9 kg</td><td>Hard or textured glass, mirror</td></tr>
           </tbody>
         </table></div>
+        <p class="muted">The gaps between the rings close up before the plastic is overstrained, so the spring goes solid instead of breaking if Z goes too deep. If the force at the scale doesn't climb any more, it has bottomed out: use a firmer spring.</p>
       </div>
 
       <div class="block">
@@ -276,27 +277,27 @@ code{font:13.5px var(--mono); background:var(--sunk); padding:1px 5px; border-ra
         <div class="tablewrap"><table>
           <thead><tr><th>Part</th><th>Orientation</th><th>File</th></tr></thead>
           <tbody>
-            <tr><td>Body</td><td>Upright, bearing bore opening up</td><td><code>qikglass_body.stl</code></td></tr>
-            <tr><td>Cap</td><td>Flat, countersinks up</td><td><code>qikglass_cap.stl</code></td></tr>
-            <tr><td>Carrier</td><td>Head pocket down on the bed</td><td><code>qikglass_carrier.stl</code></td></tr>
-            <tr><td>6 × 4 glass jig</td><td>Flat, needs a bed at least 215 mm wide</td><td><code>qikglass_jig.stl</code></td></tr>
+            <tr><td>Body</td><td>Upright, bushing down</td><td><code>qikglass_body.stl</code></td></tr>
+            <tr><td>Shaft</td><td>Upright, standing on the collet (already placed). 100% infill</td><td><code>qikglass_shaft.stl</code></td></tr>
+            <tr><td>Spring</td><td>Upright, foot down. PETG, 100% infill. The slots bridge</td><td><code>qikglass_spring_*.stl</code></td></tr>
+            <tr><td>Cap</td><td>Top face down (already flipped)</td><td><code>qikglass_cap.stl</code></td></tr>
+            <tr><td>Collet nut</td><td>Flat</td><td><code>qikglass_nut.stl</code></td></tr>
             <tr><td>Zero pointer</td><td>Point up</td><td><code>qikglass_pointer.stl</code></td></tr>
-            <tr><td>Small corner fences (×2, optional)</td><td>Flat. Use instead of the jig on a smaller printer</td><td><code>qikglass_fence.stl</code></td></tr>
+            <tr><td>Glass jig</td><td>Flat. 185 × 134 mm, fits a 200 mm print bed</td><td><code>qikglass_jig.stl</code></td></tr>
+            <tr><td>Pad stop</td><td>Flat</td><td><code>qikglass_padstop.stl</code></td></tr>
           </tbody>
         </table></div>
-        <p class="muted">PETG or PLA+, 0.2 mm layers, 4 walls, 40% infill. If the bearings are loose or won't press in, change <code>lm_fit</code> by 0.05 mm and reprint the body.</p>
+        <p class="muted">PETG for everything is best, and the spring must be PETG, because PLA creeps and loses force. Use 0.2 mm layers and 4 walls, 40% infill unless noted. Fits are set by <code>bush_clr</code>, <code>slide_clr</code> and <code>thread_clr</code> in the CAD file. If the shaft binds, raise <code>bush_clr</code> by 0.1. If the wheel wobbles, lower it.</p>
       </div>
 
       <div class="block">
         <h2>Assembly</h2>
         <ol>
-          <li>Press both LM8UU bearings into the body from the top until they sit on the bottom lip.</li>
-          <li>Screw the cap onto the body with the three countersunk screws. The cap holds the bearings in and its flange rests on top of the spindle clamp.</li>
-          <li>Slide the shaft collar onto the shaft, then push the shaft down through the cap and both bearings.</li>
-          <li>From below, slide the spring over the shaft, then push the carrier on until the shaft bottoms in its socket. Tighten the side screw.</li>
-          <li>Pull the shaft down to compress the spring a few millimetres, then lock the collar against the cap. That sets the preload. More preload gives a steadier force.</li>
-          <li>Push the cutter head into the carrier's bottom pocket. Turn it so the wheel's plane lines up with the two grooves on the carrier's sides, then tighten the screw. If the wheel is turned sideways, it won't steer.</li>
-          <li>Spin the shaft by hand. It should turn freely and spring back when you push it up.</li>
+          <li>Drop the shaft into the top of the body, collet end first, so it slides down through the bushing until its flange sits on the inner lip.</li>
+          <li>Drop the spring in on top, foot first. Its foot sits on the shaft's dome.</li>
+          <li>Screw the cap on until it just touches the spring. You'll take it off again to fit the head into the machine.</li>
+          <li>Push the QWORK head's shank up into the collet under the body. Turn it so the wheel's plane lines up with the two grooves on the shaft, then screw the nut up the collet until the head is gripped. If the wheel is turned sideways, it won't steer.</li>
+          <li>Push the collet up and let go: it should spring back. Spin it: it should turn freely. A drop of oil on the dome and in the bushing helps.</li>
         </ol>
       </div>
 
@@ -304,17 +305,18 @@ code{font:13.5px var(--mono); background:var(--sunk); padding:1px 5px; border-ra
         <h2>Swapping spindle ⇄ glass head</h2>
         <ol>
           <li>Power down and unplug the spindle lead at the board.</li>
-          <li>Loosen the clamp, lift the spindle out, drop the head in until the cap flange rests on the clamp, and tighten.</li>
+          <li>Loosen the clamp and take the spindle out. Unscrew the cap (the spring can stay inside the body). Push the body up through the clamp from below until the threaded top sticks out above it, tighten the clamp, then screw the cap back on to your pressure setting.</li>
           <li>Re-zero Z on the glass every time (see <em>Calibrate &amp; score</em>).</li>
           <li>Going back: reverse this, plug the spindle in, and re-zero Z with a bit.</li>
         </ol>
-        <p class="callout"><b>Never run a milling file with the glass head fitted.</b> Router files dive several millimetres deep and will crush the spring and break glass. Keep glass files in their own folder on the SD card.</p>
+        <img src="images/how-it-attaches.png" alt="Five steps: shaft dropped into the body from the top; spring dropped in on it; body pushed up through the spindle clamp with the cap screwed on top; QWORK cutter shank pushed up into the collet; nut screwed up to lock it, head ready above a sheet of glass" style="border-radius:8px; border:1px solid var(--line); background:#fff">
+        <p class="callout"><b>Never run a milling file with the glass head fitted.</b> Router files dive several millimetres deep and will bottom out the spring and break glass. Keep glass files in their own folder on the SD card.</p>
       </div>
     </div>
 
     <figure class="aside" style="margin:0">
-      <img src="images/scoring-head-exploded.png" alt="Exploded view: cap on top, body with bearings, shaft, spring gap, and carrier below; L-shaped glass fence to the right">
-      <figcaption>Exploded view: cap, body, 8 mm shaft, carrier (orange), and glass corner fence. The spring sits on the shaft between the body and the carrier.</figcaption>
+      <img src="images/scoring-head-exploded.png" alt="Exploded view, top to bottom: pressure cap, printed slotted spring, flanged shaft with domed top and split collet, body with threaded top and bushing, collet nut">
+      <figcaption>The five parts in fitting order, top to bottom: cap, spring, shaft, body, collet nut. The shaft and spring drop into the body from the top, and the nut goes on from below.</figcaption>
     </figure>
   </div>
 </section>
@@ -323,19 +325,37 @@ code{font:13.5px var(--mono); background:var(--sunk); padding:1px 5px; border-ra
 <section class="tab" id="tab-run" hidden>
   <div class="prose" style="max-width:72ch">
     <div class="block">
+      <h2>Your machine: connecting and checking settings</h2>
+      <p>This is from the CNC3-3018PRO manual and USB stick that came in the box. Its board is a Woodpecker v3.4 running GRBL 1.1f.</p>
+      <ol>
+        <li><b>Driver:</b> install <code>Software for Control the machine(3Axis)\Driver\CH340SER.EXE</code> once. The machine then shows up in Device Manager under Ports as <i>USB-SERIAL CH340 (COMx)</i>.</li>
+        <li><b>Candle:</b> run <code>Grblcontrol (Candle).exe</code> from the same folder. In Settings, pick that COM port at <b>115200</b> baud. The console shows <code>Grbl 1.1f ['$' for help]</code> when it's connected. Unplug the offline controller while you use the USB cable.</li>
+        <li><b>Check the speed limits:</b> type <code>$$</code> in Candle's console. Factory values are <code>$110=1000</code>, <code>$111=1000</code> (X and Y top speed, mm/min), <code>$112=800</code> and <code>$120</code>–<code>$122=30</code> (acceleration). The G-code page's default score feed of 900 stays under that. Leave these settings alone until the head is working.</li>
+        <li><b>Zeroing:</b> Candle's <i>zero XY</i> and <i>zero Z</i> buttons do the same as <code>G10 L20 P1 X0 Y0</code> and <code>Z0</code> in this guide. Jog with the arrows, using 0.1 or 0.01 mm steps near the glass.</li>
+        <li><b>Offline controller:</b> it reads <code>.nc</code> files, which the Save button makes. Plug the controller into a PC with its USB cable to copy files onto it, like a card reader. Then plug it into the board with the PC unplugged.</li>
+        <li><b>No limit switches:</b> the board has ports for them, but homing is off (<code>$22=0</code>). Use the zero pointer or park-and-power-off to find X0 Y0, as described below.</li>
+      </ol>
+      <p class="muted">The spindle clamp on this kit is a split plastic ring tightened by one bolt, and the manual warns not to overtighten it. Snug is enough for the printed body. Measure the ring's inside diameter for <code>clamp_d</code> before printing.</p>
+    </div>
+
+    <div class="block">
       <h2>Put every blank in the same place</h2>
       <p>The G-code always puts X0 Y0 at the blank's front-left corner, with the 6 in side running along X. Two things keep that repeatable: a jig that doesn't move, and a quick zeroing routine each time the machine is switched on.</p>
       <h3>Fit the jig once</h3>
+      <img src="images/jig-on-bed.png" alt="The L-shaped jig bolted to the 3018's T-slot bed: the front rail's three bolts sit in one slot, the left rail's two bolts in the next two slots back. A 6 x 4 glass blank sits in the corner, and the separate pad stop at the right end of the front rail holds a small scrap of glass." style="border-radius:8px; border:1px solid var(--line); background:#fff">
       <ol>
-        <li>Screw a flat MDF spoilboard to the bed and glue 2 mm felt or cork where the glass will sit. Set <code>felt_t</code> in the CAD file to your felt thickness. The jig rails then stand 1.5 mm above the felt, which is high enough to stop the glass but lower than 3 mm glass, so the wheel never touches them.</li>
-        <li>Print <code>qikglass_jig.stl</code>. It's an L-shaped corner stop for a 6 × 4 blank lying flat, with its long rail along X. The rail continues to the right and has a small stop for a 30 × 20 mm scrap of the same glass, which is the wheel-alignment pad. The pad's centre is marked, and it sits at X179.4 Y10, the page's default Pad X and Pad Y.</li>
-        <li>Place the jig at the front-left of the work area, leaving at least 20 mm of travel below X0 and Y0.</li>
-        <li>Square it to the machine: fit the zero pointer (below), lower it just above the front rail's inside edge, and jog along X. Tap the jig until the tip follows the edge along its whole length, then screw it down with small countersunk wood screws.</li>
+        <li>The jig bolts straight onto the 3018's aluminium bed. No spoilboard is needed. The bed's T-slots run left to right (along X), 44 mm apart. You need six M6 bolts with T-nuts, the same size as the bed clamps (5.8 mm thread), 10–12 mm long, with washers.</li>
+        <li>Print <code>qikglass_jig.stl</code> and <code>qikglass_padstop.stl</code>. The jig is an L: the front rail runs along X and the left rail along Y. The pad stop is a small separate block that holds a 30 × 20 mm scrap of the same glass for the wheel-alignment pad.</li>
+        <li>Slide T-nuts into the front slot and bolt the front rail's three holes into that one slot. That lines the rail up with X. The left rail's two holes then land in the next two slots back, 44 mm apart (marked "44"). Keep the corner near the front-left of the bed, with at least 20 mm of travel left below X0 and Y0.</li>
+        <li>Push the pad stop against the end of the front rail and bolt it into the same slot. Its marked centre is X179.4 Y10, the G-code page's default Pad X and Pad Y.</li>
+        <li>Glue 2 mm felt or cork onto the bed inside the L, covering the glass area and the pad. Set <code>felt_t</code> in the CAD file to your felt's thickness before printing. The rails then stand 1.5 mm above the felt: high enough to stop the glass, low enough that the wheel never touches them.</li>
+        <li>Check it's square: fit the zero pointer (below), lower it just above the front rail's inside edge, and jog along X. The tip should follow the edge. If it drifts, loosen the bolts, nudge the rail and retighten.</li>
       </ol>
+      <p class="muted">The bolt heads sit 14 mm outside the glass, clear of the cutter's fork and nut. If your slots are a different distance apart, change <code>slot_pitch</code> in the CAD file. If your bolts are a different size, change <code>bolt_d</code>.</p>
       <h3>Zero X and Y</h3>
       <p>The 3018 doesn't know where it is when it's switched on, so X0 Y0 has to be set at the jig corner. There are two ways to do it.</p>
       <ol>
-        <li><b>Zero pointer (any time, most accurate):</b> loosen the carrier's screw, slide the carrier off the shaft and push on <code>qikglass_pointer.stl</code>. Its tip sits exactly on the pivot axis, which is the point the G-code moves. Jog the tip into the jig's inside corner, just above the felt, and press the controller's XY zero (or send <code>G10 L20 P1 X0 Y0</code>). Swap the carrier back on and zero Z on the glass as usual.</li>
+        <li><b>Zero pointer (any time, most accurate):</b> unscrew the collet nut, take the QWORK head out and slide <code>qikglass_pointer.stl</code> up over the bottom of the shaft. Its tip sits exactly on the pivot axis, which is the point the G-code moves. Jog the tip into the jig's inside corner, just above the felt, and press the controller's XY zero (or send <code>G10 L20 P1 X0 Y0</code>). Take the pointer off, refit the cutter and nut, and zero Z on the glass as usual.</li>
         <li><b>Park and power off (quick):</b> every QikGLASS file ends with the head parked at X0 Y0. Switch the machine off there, don't move the gantry by hand, and after switching on just press XY zero. Check it with the pointer every few sessions, or after anything bumps the machine.</li>
       </ol>
       <p class="muted">If your 3018 has limit switches, you can turn on homing (<code>$22=1</code>) and save the jig corner as a permanent work offset with <code>G10 L2 P1</code>. Then <code>$H</code> at power-up restores it with no touching off. This is optional. The routine above works without switches.</p>
@@ -343,7 +363,7 @@ code{font:13.5px var(--mono); background:var(--sunk); padding:1px 5px; border-ra
       <ul>
         <li>Brush the felt clean, then push the blank firmly into the jig corner, 6 in side along the front rail. The corner notch leaves room for a chipped corner.</li>
         <li>Keep the scrap pad strip against its stop. Replace it when it's covered in scratches.</li>
-        <li>Any rectangle works in the jig, including the leftover strip from an earlier job. Set Glass blank to “Custom size” and type its width (along the front rail) and depth in inches or mm. After a job that saves a strip, “Use as next blank” fills the size in for you, and the page remembers it until next time. Glass wider than 160 mm hits the pad stop.</li>
+        <li>Any rectangle works in the jig, including the leftover strip from an earlier job. Set Glass blank to “Custom size” and type its width (along the front rail) and depth in inches or mm. After a job that saves a strip, “Use as next blank” fills the size in for you, and the page remembers it until next time. Glass wider than 160 mm hits the pad stop. Unbolt it for wider glass.</li>
         <li>Zero Z on the glass surface (paper pinch), then run the file.</li>
       </ul>
     </div>
@@ -351,12 +371,14 @@ code{font:13.5px var(--mono); background:var(--sunk); padding:1px 5px; border-ra
     <div class="block">
       <h2>Set the pressure with a kitchen scale</h2>
       <ol>
+        <li>Screw the cap down until it just touches the spring, then a quarter turn more (3 flutes) so the spring has a little preload.</li>
         <li>Put the scale on the bed under the wheel and tare it.</li>
-        <li>Jog Z down in 0.1 mm steps until the scale first jumps (that's the spring preload). Call that height "touch".</li>
-        <li>Keep stepping down until the scale reads about <b>3 kg</b>. The distance below "touch" is your <b>Score depth</b>.</li>
+        <li>Jog Z down in 0.1 mm steps until the scale first jumps. Call that height "touch".</li>
+        <li>Keep stepping down until the scale reads about <b>3 kg</b>. The distance below "touch" is your <b>Score depth</b>. With the medium spring, expect about 3 mm.</li>
         <li>Run a test on scrap. A good score is a thin, even, barely visible line that makes a steady hiss. White flakes or a gritty crunch mean too much pressure. Skips or a line that won't break mean too little. Adjust in 0.5 kg steps. Most stained glass lands at 3–5 kg.</li>
+        <li>For quick changes later, leave Score depth alone and turn the cap. Each flute adds about 0.25 mm, which is roughly 0.2 kg with the medium spring.</li>
       </ol>
-      <p class="muted">The 3018's Z motor can push well past this, but its frame flexes. If lines wander under load, add spring preload rather than more depth.</p>
+      <p class="muted">If the scale stops climbing as you go deeper, the spring has gone solid: print the firm one. Printed springs relax a little over the first few sessions, so recheck with the scale after the first week.</p>
     </div>
 
     <div class="block">
@@ -378,7 +400,7 @@ code{font:13.5px var(--mono); background:var(--sunk); padding:1px 5px; border-ra
     <div class="block">
       <h2>Pieces, 6 × 4 blanks and relief scores</h2>
       <ul>
-        <li>Every job goes on a 6 × 4 in blank (152.4 × 101.6 mm). Push the blank into the corner fence so its front-left corner is X0 Y0.</li>
+        <li>Every job goes on a 6 × 4 in blank (152.4 × 101.6 mm). Push the blank into the jig corner so its front-left corner is X0 Y0.</li>
         <li>With Layout set to “Pack bottom-left”, pieces fill a row from left to right starting at the front-left corner, then the next row up, with a gap between them. Pieces are turned 90° when that keeps the rows low. Turn this off for streaky glass with a grain. Any pieces that don't fit move onto blank 2, 3, and so on, each with its own G-code file.</li>
         <li>The unused glass ends up as one strip along the back. The trim score T runs across the blank above the top row: break it first and keep the strip for another project. Relief scores stop at the trim line, so the strip stays clean.</li>
         <li>A closed outline is treated as a piece, with everything outside it as waste. With Relief scores set to Auto, the page adds relief lines out to the glass edge: a pinwheel of tangent lines around circles and outside curves, extensions of each sharp outside corner, and a comb of parallel lines out of inside curves such as a semicircle bite.</li>
@@ -408,7 +430,7 @@ const SAMPLE = `<svg xmlns="http://www.w3.org/2000/svg" width="152.4mm" height="
 <circle cx="46" cy="51" r="24"/>
 <path d="M88,20 L132,20 L132,84 L88,84 L88,70 A17.5,17.5 0 0 0 88,35 Z"/>
 </g></svg>`;
-const MACHINE = {w:300, h:180};
+const MACHINE = {w:300, h:180, maxFeed:1000, maxZ:800};   // 3018-PRO factory GRBL: $110/$111 = 1000, $112 = 800 mm/min
 
 // ---------- tabs ----------
 const tabs = [...document.querySelectorAll('nav button')];
@@ -784,7 +806,7 @@ function build(){
     sheet = {x:pb.x0-ox, y:pb.y0-oy, w:pb.x1-pb.x0, h:pb.y1-pb.y0};
   } else {
     const [W, H] = glassWH(o.glass);
-    if (W > JIG.maxW) warns.push(`This glass is ${f1(W)} mm wide. The jig's pad stop is at 162 mm, so glass wider than ${JIG.maxW} mm hits it. Take the pad scrap out and set Pre-align to Off, or trim the glass.`);
+    if (W > JIG.maxW) warns.push(`This glass is ${f1(W)} mm wide. The jig's pad stop is at 162 mm, so glass wider than ${JIG.maxW} mm hits it. Unbolt the pad stop and set Pre-align to Off, or trim the glass.`);
     if (H > JIG.maxH) warns.push(`This glass is ${f1(H)} mm deep, more than the 3018 can reach from the jig corner. Trim it to ${JIG.maxH} mm or less.`);
     if (W < 2*o.margin + 5 || H < 2*o.margin + 5) warns.push('This glass is too small for the edge margin. Lower the margin or use a bigger piece.');
     if (nest && contact.length){
@@ -878,7 +900,7 @@ function build(){
   }
   if (o.glass !== 'page'){
     const out = scores.filter(s => !s.relief && s.contact.some(([x,y]) => x < -0.05 || y < -0.05 || x > W+0.05 || y > H+0.05)).length;
-    if (out) warns.push(`${out} score${out>1?'s run':' runs'} off the glass blank and will be scored in thin air or on the fence.`);
+    if (out) warns.push(`${out} score${out>1?'s run':' runs'} off the glass blank and will be scored in thin air or on the jig.`);
   }
 
   // G-code
@@ -915,9 +937,10 @@ function build(){
   if (bb.x1 - Math.min(0,bb.x0) > MACHINE.w || bb.y1 - Math.min(0,bb.y0) > MACHINE.h) warns.push(`The job spans ${f(bb.x1-Math.min(0,bb.x0))} × ${f(bb.y1-Math.min(0,bb.y0))} mm, larger than the 3018's 300 × 180 mm travel. Move the pad or split the sheet.`);
   if (o.r > 0 && o.align === 'none') warns.push('Pre-align is off. The wheel will point a random way at each touch-down and can skid sideways for the first few millimetres.');
   if (!scores.length) warns.push('No lines found. Draw score lines as paths or shapes with a stroke.');
+  if (o.feed > MACHINE.maxFeed) warns.push(`Score feed ${f(o.feed)} is above your machine's top speed of ${MACHINE.maxFeed} mm/min ($110 and $111). GRBL will quietly slow it to ${MACHINE.maxFeed}, so the run-time estimate is low.`);
 
   const scoreLen = scores.reduce((a,s) => a+s.len, 0);
-  const mins = (scoreLen + padLen)/o.feed + travelDist/1500 + scores.length*(o.align==='pad'?2:1)*((o.travel+o.depth)/o.plunge + 0.02);
+  const mins = (scoreLen + padLen)/Math.min(o.feed, MACHINE.maxFeed) + travelDist/MACHINE.maxFeed + scores.length*(o.align==='pad'?2:1)*((o.travel+o.depth)/o.plunge + 0.02);
   job = {scores, sheet, o, gcode: g.join('\n') + '\n', bb, warns, scoreLen, mins, reliefs: rn, pack, trimY};
   render();
 }
@@ -1088,11 +1111,11 @@ if (['gcode','build','run'].includes(hashTab)) start = hashTab;
 // Lines handed over from the Select parts page
 let handoff = null;
 try { handoff = JSON.parse(localStorage.getItem('qikglass-handoff') || 'null'); localStorage.removeItem('qikglass-handoff'); } catch(e){}
+syncGlassUI();
 if (handoff && handoff.svg && Date.now() - (handoff.t||0) < 30*60*1000){
-  load(handoff.svg, handoff.name || 'selection.svg');
+  load(handoff.svg, handoff.name || 'selection.svg');   // the selected parts from Select parts
   start = 'gcode';
-} else syncGlassUI();
-load(SAMPLE, null);
+} else load(SAMPLE, null);
 showTab(['gcode','build','run'].includes(start) ? start : 'gcode');
 })();
 </script>
