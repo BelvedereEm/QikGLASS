@@ -11,9 +11,10 @@ A spring-loaded, self-steering glass-scoring head that drops into the spindle cl
 
 | Path | What it is |
 |---|---|
-| `index.html` | **Pattern → G-code** tool plus the build and calibration guide. Lays the job out on a 6 × 4 in glass blank, adds relief scores around curves and corners, and saves a `.nc` file for the controller. |
-| `trace.html` | **PNG → SVG**: open a picture of a pattern (black lines on white), set its real size, and trace every enclosed area into a piece outline. Flags pieces that won't fit a 6 × 4 in blank. |
-| `select.html` | **Select parts**: open a full pattern SVG, click or box-select just the lines you want, set their cutting order, and send them to the G-code page |
+| `index.html` | **Easy mode** (the home page): a four-step wizard. 1 Choose a picture (PNG, JPG or SVG) → 2 tap the pieces to cut → 3 pick the glass and how hard to press → 4 check the preview and save the `.nc` file, with a checklist for the machine. Set up for the swivel holder. |
+| `advanced.html` | **Advanced tools**: the full Pattern → G-code page with every setting, plus the build and calibration guides. |
+| `trace.html` | **PNG → SVG** (advanced): trace a picture into piece outlines and save them as an SVG. |
+| `select.html` | **Select parts** (advanced): click or box-select lines in a full pattern SVG and send them to the advanced G-code page. |
 | `cad/qikglass_scoring_head.scad` | Parametric OpenSCAD source for all printed parts |
 | `stl/` | Every printed part at the default dimensions (listed below) |
 | `images/` | Renders |
@@ -98,11 +99,10 @@ Relief lines are scored after the outline and stop where they meet it, so nothin
 
 ## Quick workflow
 
-1. Unplug the spindle, swap in the scoring head, and zero Z on the glass surface (paper-pinch test).
-2. Find **score depth** with a kitchen scale: jog down past first contact until it reads about 3 kg (about 3 mm with the medium spring). Fine-tune later by turning the cap.
-3. Get a pattern: trace a PNG in `trace.html`, or draw closed piece outlines or score lines in Inkscape (in mm).
-4. In `select.html`, click the piece or pieces to cut from one 6 × 4 in blank and choose **Send to QikGLASS**. The G-code page packs them from the front-left corner, adds a trim line and relief scores, and uses extra blanks if needed. Check the warnings, then save the `.nc` file.
-5. Oil the wheel, push the blank into the jig corner, and run the file. Break the trim line T first and keep that strip. Then break the relief pieces, and finally run each outline.
+1. Open https://belvedereem.github.io/QikGLASS/ and drop in your picture (or press **Try the example**). Type how wide the whole picture should be.
+2. Tap the pieces you want. Red pieces are too big for the glass.
+3. Choose the glass (6 × 4 in, the leftover strip from last time, or another size) and the score depth from glass test A.
+4. Check the preview and press **Save**. Put the `.nc` file on the SD card, zero X/Y at the jig corner and Z on the glass, oil the cup, and run it. Break the green leftover line first, then the purple relief cuts, then your pieces.
 
 Full build, calibration and safety notes are in the page's **Build the head** and **Calibrate & score** tabs.
 

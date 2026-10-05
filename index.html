@@ -3,446 +3,348 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>QikGLASS Scoring Head</title>
+<title>QikGLASS Glass Cutter</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700&family=JetBrains+Mono:wght@400&display=swap">
 <style>
-body{margin:0}
 :root{
-  --bg:#F2F5F4; --surface:#FFFFFF; --sunk:#E8EEEC; --ink:#15201E; --muted:#56655F; --line:#D3DDDA;
-  --accent:#0E7C74; --accent-ink:#FFFFFF; --amber:#B86E00; --cobalt:#2F4FB0; --warn:#B0501A; --warn-bg:#FBEDE3; --ok:#2F7D3A;
-  --grid:#E3EAE8; --sheet:#DCEBE8; --relief:#9A5BB5; --margin:#B9CBC7; --keep:#EEF4E6; --keep-ink:#4F7A2A;
-  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
-  --body:"Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --bg:#F4F7FB; --surface:#FFFFFF; --sunk:#EAF0F6; --ink:#1A2433; --muted:#5B6878; --line:#D5DEE8;
+  --accent:#1F7AE0; --accent-2:#E8F1FD; --accent-ink:#FFFFFF;
+  --piece:#1F7AE0; --piece-fill:rgba(31,122,224,.16); --pick:#FF8A1F; --pick-fill:rgba(255,138,31,.38);
+  --relief:#9B4FD0; --trim:#2E9E4F; --keep:#E3F5E8; --big:#D93B3B; --big-fill:rgba(217,59,59,.12);
+  --warn-bg:#FFF4DB; --warn-ink:#7A4B00; --ok-bg:#E3F5E8; --ok-ink:#1F6B36; --glass:#DDEFF5; --grid:#E7EEF4;
+  --display:"Fredoka", "Trebuchet MS", system-ui, sans-serif;
+  --body:"Nunito Sans", "Segoe UI", system-ui, sans-serif;
   --mono:"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     color-scheme:dark;
-    --bg:#0F1615; --surface:#162120; --sunk:#1C2927; --ink:#E3ECEA; --muted:#94A6A1; --line:#2A3A37;
-    --accent:#43B8AC; --accent-ink:#06201D; --amber:#F0A63F; --cobalt:#8BA4F2; --warn:#F2915A; --warn-bg:#35211A; --ok:#7CC98A;
-    --grid:#1E2B29; --sheet:#1D3431; --relief:#C592DD; --margin:#35504B; --keep:#253222; --keep-ink:#A6D17E;
+    --bg:#101722; --surface:#172131; --sunk:#1E2A3C; --ink:#E6EDF6; --muted:#9AA8BA; --line:#2B3A50;
+    --accent:#5BA4F5; --accent-2:#1C3352; --accent-ink:#08172B;
+    --piece:#5BA4F5; --piece-fill:rgba(91,164,245,.16); --pick:#FFA552; --pick-fill:rgba(255,165,82,.36);
+    --relief:#C98BF0; --trim:#5CCB7C; --keep:#1B3326; --big:#F07070; --big-fill:rgba(240,112,112,.14);
+    --warn-bg:#3A2E14; --warn-ink:#F6CF7A; --ok-bg:#183024; --ok-ink:#8FE0A6; --glass:#1B3440; --grid:#1D2939;
   }
 }
 :root[data-theme="dark"]{
   color-scheme:dark;
-  --bg:#0F1615; --surface:#162120; --sunk:#1C2927; --ink:#E3ECEA; --muted:#94A6A1; --line:#2A3A37;
-  --accent:#43B8AC; --accent-ink:#06201D; --amber:#F0A63F; --cobalt:#8BA4F2; --warn:#F2915A; --warn-bg:#35211A; --ok:#7CC98A;
-  --grid:#1E2B29; --sheet:#1D3431; --relief:#C592DD; --margin:#35504B; --keep:#253222; --keep-ink:#A6D17E;
+  --bg:#101722; --surface:#172131; --sunk:#1E2A3C; --ink:#E6EDF6; --muted:#9AA8BA; --line:#2B3A50;
+  --accent:#5BA4F5; --accent-2:#1C3352; --accent-ink:#08172B;
+  --piece:#5BA4F5; --piece-fill:rgba(91,164,245,.16); --pick:#FFA552; --pick-fill:rgba(255,165,82,.36);
+  --relief:#C98BF0; --trim:#5CCB7C; --keep:#1B3326; --big:#F07070; --big-fill:rgba(240,112,112,.14);
+  --warn-bg:#3A2E14; --warn-ink:#F6CF7A; --ok-bg:#183024; --ok-ink:#8FE0A6; --glass:#1B3440; --grid:#1D2939;
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-body{background:var(--bg); color:var(--ink); font:16px/1.5 var(--body); padding-inline:16px; padding-block:0 48px}
-.wrap{max-width:1180px; margin:0 auto}
-header{display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:12px 24px; padding-block:28px 18px; border-bottom:1px solid var(--line)}
-h1{font:700 clamp(28px,4vw,40px)/1.05 var(--display); letter-spacing:-.01em; margin:0}
-h1 span{color:var(--accent)}
-.spec{font:13px/1.4 var(--mono); color:var(--muted); margin:6px 0 0}
-nav{display:flex; gap:4px; flex-wrap:wrap}
-nav button{font:600 15px var(--body); background:none; border:1px solid transparent; color:var(--muted); padding:8px 14px; border-radius:6px; cursor:pointer}
-nav a.navlink{font:600 15px var(--body); color:var(--muted); padding:8px 14px; border-radius:6px; border:1px solid transparent; text-decoration:none}
-nav a.navlink:hover{color:var(--ink)}
-nav button[aria-selected="true"]{background:var(--surface); border-color:var(--line); color:var(--ink)}
-nav button:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
-h2{font:700 24px/1.2 var(--display); margin:0; text-wrap:balance}
-h3{font:600 17px/1.3 var(--display); margin:0}
-p{margin:0}
-.muted{color:var(--muted)}
-section.tab{padding-top:24px}
+body{margin:0; background:var(--bg); color:var(--ink); font:17px/1.55 var(--body); padding:0 16px 64px}
+.wrap{max-width:920px; margin:0 auto}
+a{color:var(--accent)}
+header{display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px 20px; padding:22px 0 14px}
+.logo{font:700 30px/1 var(--display); margin:0; letter-spacing:.01em}
+.logo span{color:var(--accent)}
+.tag{margin:4px 0 0; color:var(--muted); font-size:15px}
+.toplinks{display:flex; gap:6px; flex-wrap:wrap}
+.toplinks a{font:600 14px var(--body); color:var(--muted); text-decoration:none; padding:7px 12px; border-radius:999px; border:1px solid var(--line); background:var(--surface)}
+.toplinks a:hover{color:var(--ink); border-color:var(--accent)}
 
-/* G-code tool */
-.tool{display:grid; grid-template-columns:330px 1fr; gap:20px; align-items:start}
-@media (max-width:880px){ .tool{grid-template-columns:minmax(0,1fr)} }
-.panel{background:var(--surface); border:1px solid var(--line); border-radius:8px}
-.controls{padding:16px; display:flex; flex-direction:column; gap:18px}
-.load{display:flex; flex-direction:column; gap:8px}
-.drop{border:1.5px dashed var(--line); border-radius:6px; padding:14px; text-align:center; color:var(--muted); font-size:14px}
-.drop.over{border-color:var(--accent); color:var(--ink)}
-.drop label{color:var(--accent); font-weight:600; cursor:pointer; text-decoration:underline}
-.filename{font:13px var(--mono); color:var(--muted); overflow-wrap:anywhere}
-fieldset{border:0; margin:0; padding:0; display:flex; flex-direction:column; gap:8px}
-legend{font:600 12px var(--body); text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin-bottom:6px; padding:0}
-.row{display:grid; grid-template-columns:1fr 104px; align-items:center; gap:10px}
-.row label{font-size:15px}
-.row small{display:block; color:var(--muted); font-size:12.5px; line-height:1.3}
-.unit{position:relative}
-.unit input, .row select{width:100%; font:14px var(--mono); padding:6px 34px 6px 8px; border:1px solid var(--line); border-radius:5px; background:var(--bg); color:var(--ink); font-variant-numeric:tabular-nums}
-.row select{padding-right:6px; font-family:var(--body)}
-.unit span{position:absolute; right:8px; top:50%; transform:translateY(-50%); font:12px var(--mono); color:var(--muted); pointer-events:none}
-.btn{font:600 14px var(--body); border-radius:6px; padding:8px 14px; cursor:pointer; border:1px solid var(--line); background:var(--surface); color:var(--ink)}
-.wh{display:grid; grid-template-columns:1fr auto 1fr auto; gap:4px; align-items:center; font-size:13px; color:var(--muted)}
-.wh input{width:100%; min-width:0; font:14px var(--mono); padding:6px 6px; border:1px solid var(--line); border-radius:5px; background:var(--bg); color:var(--ink)}
-.wh select{font:13px var(--body); padding:6px 2px; border:1px solid var(--line); border-radius:5px; background:var(--bg); color:var(--ink)}
-.row.stack{grid-template-columns:1fr; gap:6px}
-.wh{max-width:260px}
-.leftover{display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; background:var(--keep); color:var(--keep-ink); border-radius:6px; padding:8px 10px; font-size:14px}
-.btn.primary{background:var(--accent); color:var(--accent-ink); border-color:var(--accent)}
-.btn:disabled{opacity:.5; cursor:not-allowed}
-.right{display:flex; flex-direction:column; gap:16px; min-width:0}
-.stats{display:flex; flex-wrap:wrap; gap:8px 28px; padding:14px 16px; border-bottom:1px solid var(--line)}
-.stat b{display:block; font:600 20px var(--mono); font-variant-numeric:tabular-nums}
-.stat span{font-size:12px; text-transform:uppercase; letter-spacing:.07em; color:var(--muted)}
-.canvasbox{padding:12px}
-canvas{display:block; width:100%; height:auto; border-radius:4px; background:var(--sunk)}
-.legend{display:flex; flex-wrap:wrap; gap:6px 18px; padding:0 16px 14px; font-size:13px; color:var(--muted)}
-.legend i{display:inline-block; width:18px; height:0; border-top:2.5px solid; vertical-align:middle; margin-right:6px}
-.warns{display:flex; flex-direction:column; gap:6px}
-.warn{background:var(--warn-bg); color:var(--warn); border-radius:6px; padding:8px 12px; font-size:14px}
-.okmsg{color:var(--ok); font-size:14px}
-.codehead{display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; padding:12px 16px; border-bottom:1px solid var(--line)}
-.codehead .btns{display:flex; gap:8px; flex-wrap:wrap}
-textarea{display:block; width:100%; height:240px; border:0; border-radius:0 0 8px 8px; background:var(--surface); color:var(--ink); font:12.5px/1.5 var(--mono); padding:12px 16px; resize:vertical}
-.status{font-size:13px; color:var(--muted); min-height:1.2em}
+/* stepper */
+ol.steps{list-style:none; display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin:6px 0 18px; padding:0; counter-reset:s}
+ol.steps li{min-width:0}
+ol.steps button{width:100%; display:flex; align-items:center; gap:10px; background:none; border:0; padding:8px 6px; cursor:pointer; color:var(--muted); font:600 15px var(--body); text-align:left; border-radius:12px}
+ol.steps button:disabled{cursor:default; opacity:.6}
+ol.steps li[data-state="now"] button:disabled{opacity:1}
+ol.steps .dot{flex:none; width:36px; height:36px; border-radius:50%; display:grid; place-items:center; font:700 17px var(--display); background:var(--sunk); color:var(--muted); border:2px solid var(--line)}
+ol.steps li[data-state="now"] .dot{background:var(--accent); color:var(--accent-ink); border-color:var(--accent)}
+ol.steps li[data-state="now"] button{color:var(--ink)}
+ol.steps li[data-state="done"] .dot{background:var(--ok-bg); color:var(--ok-ink); border-color:var(--trim)}
+ol.steps .lbl{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+@media (max-width:620px){ ol.steps .lbl{display:none} ol.steps button{justify-content:center} }
 
-/* Guides */
-.guide{display:grid; grid-template-columns:minmax(0,1fr) 320px; gap:32px; align-items:start}
-@media (max-width:880px){ .guide{grid-template-columns:minmax(0,1fr)} }
-.prose{display:flex; flex-direction:column; gap:28px; max-width:70ch}
-.block{display:flex; flex-direction:column; gap:10px}
-.prose ol, .prose ul{margin:0; padding-left:22px; display:flex; flex-direction:column; gap:7px}
-.aside{position:sticky; top:16px; display:flex; flex-direction:column; gap:12px}
-.aside img{border-radius:8px; border:1px solid var(--line); background:#fff}
-.aside figcaption{font-size:13px; color:var(--muted)}
-.tablewrap{overflow-x:auto}
-table{border-collapse:collapse; width:100%; font-size:15px}
-th,td{text-align:left; padding:7px 10px 7px 0; border-bottom:1px solid var(--line); vertical-align:top}
-th{font:600 12px var(--body); text-transform:uppercase; letter-spacing:.07em; color:var(--muted)}
-td.q{font-family:var(--mono); white-space:nowrap; font-variant-numeric:tabular-nums}
-code{font:13.5px var(--mono); background:var(--sunk); padding:1px 5px; border-radius:4px}
-.callout{border-left:3px solid var(--amber); padding:8px 0 8px 14px; color:var(--ink)}
-.callout b{color:var(--amber)}
-.measure{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px}
-.measure div{background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:12px 14px}
-.measure code{font-size:13px}
-@media (prefers-reduced-motion: reduce){ *{transition:none!important} }
+.card{background:var(--surface); border:1px solid var(--line); border-radius:22px; padding:24px; box-shadow:0 2px 0 var(--line)}
+@media (max-width:520px){ .card{padding:18px 16px; border-radius:18px} }
+.card h2{font:600 clamp(24px,4.5vw,32px)/1.15 var(--display); margin:0 0 6px}
+.card h2 .n{color:var(--accent)}
+.lead{color:var(--muted); margin:0 0 18px; max-width:62ch}
+h3{font:600 19px/1.3 var(--display); margin:22px 0 10px}
+
+button{font:inherit}
+.btn{display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:48px; padding:10px 22px; border-radius:999px; border:2px solid var(--line); background:var(--surface); color:var(--ink); font:700 16px var(--body); cursor:pointer; text-decoration:none}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent); border-color:var(--accent); color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.07)}
+.btn.big{min-height:60px; font-size:19px; padding:12px 30px}
+.btn.small{min-height:38px; padding:6px 14px; font-size:14px}
+.btn:disabled{opacity:.45; cursor:not-allowed; filter:none}
+:focus-visible{outline:3px solid var(--pick); outline-offset:2px}
+.nav{display:flex; justify-content:space-between; gap:12px; margin-top:24px; flex-wrap:wrap}
+.nav .spacer{flex:1}
+
+/* step 1 */
+.drop{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; text-align:center; border:3px dashed var(--line); border-radius:20px; padding:34px 18px; background:var(--sunk); transition:border-color .15s, background .15s}
+.drop.over{border-color:var(--accent); background:var(--accent-2)}
+.drop .big-ico{width:64px; height:64px}
+.drop b{font:600 21px var(--display)}
+.drop small{color:var(--muted)}
+.or{margin-top:14px; display:flex; align-items:center; gap:10px; justify-content:center; flex-wrap:wrap; color:var(--muted)}
+.loaded{display:grid; grid-template-columns:minmax(0,1.4fr) minmax(0,1fr); gap:20px; align-items:start; margin-top:20px}
+@media (max-width:720px){ .loaded{grid-template-columns:minmax(0,1fr)} }
+.viewbox{background:var(--sunk); border-radius:16px; padding:10px; position:relative}
+canvas{display:block; width:100%}
+.found{font:600 22px/1.25 var(--display); margin:0 0 4px}
+.found .num{color:var(--accent)}
+.field{display:flex; flex-direction:column; gap:6px; margin:16px 0}
+.field > label, .field > .flabel{font-weight:700}
+.field small{color:var(--muted); font-size:14px}
+.inrow{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+input[type=number]{font:600 18px var(--body); width:7.5em; min-height:46px; padding:8px 12px; border-radius:12px; border:2px solid var(--line); background:var(--surface); color:var(--ink)}
+input[type=number]:focus{border-color:var(--accent); outline:none}
+.seg{display:inline-flex; background:var(--sunk); border-radius:999px; padding:4px; gap:2px}
+.seg button{border:0; background:none; color:var(--muted); font:700 15px var(--body); padding:8px 16px; border-radius:999px; cursor:pointer; min-height:38px}
+.seg button[aria-pressed="true"]{background:var(--surface); color:var(--ink); box-shadow:0 1px 3px rgba(0,0,0,.15)}
+details.more{margin-top:14px; border:1px solid var(--line); border-radius:14px; padding:4px 14px}
+details.more summary{cursor:pointer; font-weight:700; padding:10px 0; color:var(--muted)}
+details.more[open] summary{color:var(--ink)}
+.slider{display:grid; grid-template-columns:1fr auto; gap:2px 12px; align-items:center; margin:10px 0 16px}
+.slider label{font-weight:700}
+.slider small{grid-column:1/-1; color:var(--muted); font-size:14px}
+.slider output{font:600 15px var(--mono); color:var(--accent)}
+.slider input{grid-column:1/-1; width:100%; accent-color:var(--accent); height:28px}
+.note{border-radius:14px; padding:12px 14px; font-size:15px; margin:12px 0 0}
+.note.warn{background:var(--warn-bg); color:var(--warn-ink)}
+.note.ok{background:var(--ok-bg); color:var(--ok-ink)}
+.note.info{background:var(--accent-2); color:var(--ink)}
+.busy{position:absolute; inset:10px; display:grid; place-items:center; background:color-mix(in srgb, var(--sunk) 75%, transparent); border-radius:12px; font:600 18px var(--display)}
+
+/* step 2 */
+.pickbar{display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:12px}
+.pickbar .count{margin-left:auto; font:600 18px var(--display)}
+#pickCv{cursor:pointer; touch-action:manipulation}
+.legend{display:flex; gap:16px; flex-wrap:wrap; font-size:14px; color:var(--muted); margin-top:10px}
+.legend i{display:inline-block; width:22px; height:12px; border-radius:4px; vertical-align:middle; margin-right:6px}
+
+/* step 3 */
+.choices{display:grid; grid-template-columns:repeat(auto-fill, minmax(190px,1fr)); gap:12px}
+.choice{position:relative; display:flex; flex-direction:column; gap:4px; text-align:left; border:3px solid var(--line); border-radius:18px; padding:14px 16px; background:var(--surface); cursor:pointer; color:var(--ink)}
+.choice:hover{border-color:var(--accent)}
+.choice[aria-pressed="true"]{border-color:var(--accent); background:var(--accent-2)}
+.choice[aria-pressed="true"]::after{content:"✓"; position:absolute; top:10px; right:14px; font:700 18px var(--display); color:var(--accent)}
+.choice b{font:600 19px var(--display)}
+.choice small{color:var(--muted); font-size:14px}
+.choice svg{width:72px; height:48px; margin-bottom:4px}
+.choice.fixed{cursor:default}
+.custom{display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:12px}
+.toggle{display:flex; align-items:flex-start; gap:14px; padding:12px 0; border-top:1px solid var(--line); cursor:pointer}
+.toggle:first-of-type{border-top:0}
+.toggle input{position:absolute; opacity:0; pointer-events:none}
+.toggle .sw{flex:none; width:52px; height:30px; border-radius:999px; background:var(--line); position:relative; transition:background .15s; margin-top:2px}
+.toggle .sw::after{content:""; position:absolute; top:3px; left:3px; width:24px; height:24px; border-radius:50%; background:#fff; transition:transform .15s; box-shadow:0 1px 2px rgba(0,0,0,.3)}
+.toggle input:checked + .sw{background:var(--accent)}
+.toggle input:checked + .sw::after{transform:translateX(22px)}
+.toggle input:focus-visible + .sw{outline:3px solid var(--pick); outline-offset:2px}
+.toggle b{display:block}
+.toggle small{color:var(--muted); font-size:14px}
+.grid2{display:grid; grid-template-columns:repeat(auto-fill, minmax(230px,1fr)); gap:4px 20px}
+.grid2 .field{margin:10px 0}
+select{font:600 16px var(--body); min-height:46px; padding:8px 12px; border-radius:12px; border:2px solid var(--line); background:var(--surface); color:var(--ink)}
+
+/* step 4 */
+.sheets{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px}
+.stats{display:grid; grid-template-columns:repeat(auto-fit, minmax(130px,1fr)); gap:10px; margin:14px 0}
+.stat{background:var(--sunk); border-radius:14px; padding:10px 14px}
+.stat b{display:block; font:600 24px/1.2 var(--display)}
+.stat span{font-size:14px; color:var(--muted)}
+.save{display:flex; flex-direction:column; align-items:flex-start; gap:8px; margin:18px 0 6px}
+.save .fn{font:13px var(--mono); color:var(--muted); word-break:break-all}
+ol.check{list-style:none; padding:0; margin:0; counter-reset:c}
+ol.check li{counter-increment:c; display:flex; gap:12px; align-items:flex-start; padding:10px 0; border-top:1px solid var(--line)}
+ol.check li:first-child{border-top:0}
+ol.check li::before{content:counter(c); flex:none; width:30px; height:30px; border-radius:50%; background:var(--accent-2); color:var(--accent); display:grid; place-items:center; font:700 16px var(--display)}
+ol.check input{width:22px; height:22px; margin:4px 0 0 auto; flex:none; accent-color:var(--trim)}
+ol.check li span{flex:1}
+pre.gcode{max-height:280px; overflow:auto; background:var(--sunk); border-radius:12px; padding:12px; font:12px/1.5 var(--mono); white-space:pre}
+.chip{display:inline-block; padding:1px 9px; border-radius:999px; font-weight:700; font-size:14px}
+.c-trim{background:var(--keep); color:var(--trim)}
+.c-rel{background:color-mix(in srgb, var(--relief) 16%, transparent); color:var(--relief)}
+.c-pc{background:var(--accent-2); color:var(--accent)}
+footer{margin-top:28px; color:var(--muted); font-size:14px; text-align:center}
+#svgHost{position:absolute; width:0; height:0; overflow:hidden; visibility:hidden}
 </style>
 </head>
 <body>
 <div class="wrap">
 <header>
   <div>
-    <h1>Qik<span>GLASS</span> scoring head</h1>
-    <p class="spec">3018-PRO / PRO-MAX · GRBL · QWORK carbide wheel · 6 × 4 in glass</p>
+    <p class="logo">Qik<span>GLASS</span></p>
+    <p class="tag">Turn a picture into a glass-cutting file for your 3018 CNC.</p>
   </div>
-  <nav role="tablist" aria-label="Sections">
-    <a class="navlink" href="trace.html">PNG → SVG</a>
-    <a class="navlink" href="select.html">Select parts</a>
-    <button role="tab" id="t-gcode" aria-selected="true" data-tab="gcode">Pattern → G-code</button>
-    <button role="tab" id="t-build" aria-selected="false" data-tab="build">Build the head</button>
-    <button role="tab" id="t-run" aria-selected="false" data-tab="run">Calibrate &amp; score</button>
+  <nav class="toplinks" aria-label="More">
+    <a href="advanced.html#build">Build the holder</a>
+    <a href="advanced.html#run">Machine tips</a>
+    <a href="advanced.html#gcode">Advanced tools</a>
   </nav>
 </header>
 
-<!-- ============ G-CODE ============ -->
-<section class="tab" id="tab-gcode">
-  <div class="tool">
-    <div class="panel controls">
-      <div class="load">
-        <h3>Score lines</h3>
-        <div class="drop" id="drop">Drop an SVG here or <label for="file">choose a file</label>
-          <input type="file" id="file" accept=".svg,image/svg+xml" hidden>
-        </div>
-        <div class="filename" id="fname">Sample: 2 pieces on a 6 × 4 in blank</div>
-        <button class="btn" id="sampleBtn" type="button">Reload sample</button>
+<ol class="steps" id="steps">
+  <li data-state="now"><button data-go="1"><span class="dot">1</span><span class="lbl">Picture</span></button></li>
+  <li><button data-go="2" disabled><span class="dot">2</span><span class="lbl">Pick pieces</span></button></li>
+  <li><button data-go="3" disabled><span class="dot">3</span><span class="lbl">Glass</span></button></li>
+  <li><button data-go="4" disabled><span class="dot">4</span><span class="lbl">Save file</span></button></li>
+</ol>
+
+<main>
+<!-- STEP 1 -->
+<section class="card" id="s1" aria-labelledby="h1">
+  <h2 id="h1"><span class="n">1.</span> Choose your picture</h2>
+  <p class="lead">Use a drawing with dark lines on a white background. Every closed shape becomes one piece of glass.</p>
+
+  <label class="drop" id="drop" for="file">
+    <svg class="big-ico" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="12" width="48" height="40" rx="6"/><circle cx="23" cy="26" r="5"/><path d="M8 44l14-12 10 9 8-6 16 13"/></svg>
+    <b>Drop your picture here</b>
+    <span class="btn primary">Choose a file</span>
+    <small>PNG, JPG or SVG</small>
+  </label>
+  <input id="file" type="file" accept=".png,.jpg,.jpeg,.gif,.webp,.bmp,.svg,image/*" hidden>
+  <div class="or">No picture yet? <button class="btn small" id="exampleBtn">Try the example</button></div>
+
+  <div class="loaded" id="loaded" hidden>
+    <div class="viewbox"><canvas id="traceCv" aria-label="Your picture with the pieces found"></canvas><div class="busy" id="busy" hidden>Looking for pieces…</div></div>
+    <div>
+      <p class="found" id="found"></p>
+      <p class="muted" id="fname" style="margin:0;font-size:14px;word-break:break-all"></p>
+      <div class="field">
+        <label for="pw">How wide is the whole picture?</label>
+        <div class="inrow"><input id="pw" type="number" step="0.1" min="0.5" value="7.5">
+          <div class="seg" role="group" aria-label="Units"><button data-unit="in" aria-pressed="true">in</button><button data-unit="mm" aria-pressed="false">mm</button></div></div>
+        <small id="pwHint">Make it bigger or smaller here. The pieces grow or shrink with it.</small>
       </div>
-
-      <fieldset>
-        <legend>Glass piece</legend>
-        <div class="row"><label for="glass">Glass blank</label><select id="glass"><option value="6x4" selected>6 × 4 in</option><option value="custom">Custom size</option><option value="page">SVG page size</option></select></div>
-        <div class="row stack" id="customRow" hidden><label for="cw">Width × height<small>Width runs along the front rail (X)</small></label>
-          <div class="wh"><input id="cw" type="number" step="0.05" min="0.5" value="6" aria-label="Glass width"><span>×</span><input id="ch" type="number" step="0.05" min="0.5" value="1.5" aria-label="Glass height"><select id="cunit" aria-label="Units"><option value="in" selected>in</option><option value="mm">mm</option></select></div></div>
-        <div class="leftover" id="leftoverBox" hidden><span id="leftoverTxt"></span><button class="btn" id="useLeftover" type="button">Use as next blank</button></div>
-        <div class="row"><label for="layout">Layout<small>Packing keeps the leftover in one piece</small></label><select id="layout"><option value="nest" selected>Pack bottom-left</option><option value="keep">Keep as drawn</option></select></div>
-        <div class="row" data-for="nest"><label for="gap">Gap between pieces<small>Room to score and break</small></label><div class="unit"><input id="gap" type="number" step="1" min="2" value="6"><span>mm</span></div></div>
-        <div class="row" data-for="nest"><label for="turn">Turn pieces to fit<small>Say No for streaky glass with a grain direction</small></label><select id="turn"><option value="yes" selected>Yes</option><option value="no">No</option></select></div>
-        <div class="row" data-for="nest"><label for="trim">Save leftover<small>Adds a trim score above the top row</small></label><select id="trim"><option value="yes" selected>Yes</option><option value="no">No</option></select></div>
-        <div class="row" data-for="nest" id="blankRow" hidden><label for="blank">Blank<small>Pieces that don't fit go onto the next blank</small></label><select id="blank"><option value="0">1 of 1</option></select></div>
-        <div class="row" data-for="keep"><label for="rot">Rotate pattern</label><select id="rot"><option value="0" selected>0°</option><option value="90">90°</option></select></div>
-        <div class="row"><label for="margin">Edge margin<small>Keep pieces this far from the glass edge</small></label><div class="unit"><input id="margin" type="number" step="1" min="0" value="5"><span>mm</span></div></div>
-        <div class="row"><label for="scale">Scale</label><div class="unit"><input id="scale" type="number" step="1" value="100"><span>%</span></div></div>
-        <button class="btn" id="fitBtn" type="button" data-for="keep">Fit pattern to glass</button>
-      </fieldset>
-
-      <fieldset>
-        <legend>Relief scores</legend>
-        <div class="row"><label for="relief">Relief scores<small>Added around closed pieces</small></label><select id="relief"><option value="auto" selected>Auto</option><option value="off">Off</option></select></div>
-        <div class="row"><label for="density">Density<small>More lines = smaller bits to break</small></label><select id="density"><option value="light">Light</option><option value="normal" selected>Normal</option><option value="dense">Dense</option></select></div>
-        <div class="row"><label for="split">Sharp corners<small>A swivel wheel can’t turn on the spot</small></label><select id="split"><option value="split" selected>Split into sides</option><option value="keep">Keep as one</option></select></div>
-      </fieldset>
-
-      <fieldset>
-        <legend>Pressure &amp; height</legend>
-        <div class="row"><label for="depth">Score depth<small>From your scale test, below Z0</small></label><div class="unit"><input id="depth" type="number" step="0.05" value="1.5"><span>mm</span></div></div>
-        <div class="row"><label for="travel">Travel height<small>Above glass</small></label><div class="unit"><input id="travel" type="number" step="0.5" value="3"><span>mm</span></div></div>
-      </fieldset>
-
-      <fieldset>
-        <legend>Speeds</legend>
-        <div class="row"><label for="feed">Score feed<small>Your 3018 tops out at 1000 ($110)</small></label><div class="unit"><input id="feed" type="number" step="50" value="900"><span>/min</span></div></div>
-        <div class="row"><label for="plunge">Touch-down feed</label><div class="unit"><input id="plunge" type="number" step="10" value="150"><span>/min</span></div></div>
-      </fieldset>
-
-      <fieldset>
-        <legend>Swivel wheel</legend>
-        <div class="row"><label for="caster">Caster offset<small>Match <code>caster</code> in the CAD file</small></label><div class="unit"><input id="caster" type="number" step="0.1" value="1.5"><span>mm</span></div></div>
-        <div class="row"><label for="align">Pre-align wheel<small>Short stroke on a scrap pad before each score</small></label><select id="align"><option value="pad" selected>On pad</option><option value="none">Off</option></select></div>
-        <div class="row"><label for="padx">Pad X</label><div class="unit"><input id="padx" type="number" step="0.5" value="179.4"><span>mm</span></div></div>
-        <div class="row"><label for="pady">Pad Y</label><div class="unit"><input id="pady" type="number" step="0.5" value="10"><span>mm</span></div></div>
-        <div class="row"><label for="stroke">Pad stroke</label><div class="unit"><input id="stroke" type="number" step="1" value="8"><span>mm</span></div></div>
-      </fieldset>
-
-      <fieldset>
-        <legend>Start &amp; finish</legend>
-        <div class="row"><label for="inset">Start inset<small>Touch down this far inside the edge</small></label><div class="unit"><input id="inset" type="number" step="0.5" value="1"><span>mm</span></div></div>
-        <div class="row"><label for="leadout">Run-out<small>Extend past the end</small></label><div class="unit"><input id="leadout" type="number" step="0.5" value="0"><span>mm</span></div></div>
-      </fieldset>
-
-      <fieldset>
-        <legend>Output</legend>
-        <div class="row"><label for="origin">Work zero (X0 Y0)<small>For SVG page size only. On a 6 × 4 blank, X0 Y0 is its front-left corner.</small></label><select id="origin"><option value="sheet" selected>Sheet corner</option><option value="drawing">Drawing corner</option></select></div>
-        <div class="row"><label for="oil">Pause to re-oil<small>Every N scores (M0); 0 = off</small></label><div class="unit"><input id="oil" type="number" step="1" min="0" value="0"><span>#</span></div></div>
-      </fieldset>
-    </div>
-
-    <div class="right">
-      <div class="panel">
-        <div class="stats" id="stats"></div>
-        <div class="canvasbox"><canvas id="cv" width="800" height="560" aria-label="Preview of score paths"></canvas></div>
-        <div class="legend">
-          <span><i style="border-color:var(--accent)"></i>Wheel path (the score)</span>
-          <span><i style="border-color:var(--cobalt); border-top-style:dashed"></i>Pivot path (what the machine moves)</span>
-          <span><i style="border-color:var(--keep-ink)"></i>Trim line (T): break first to keep the leftover</span>
-          <span><i style="border-color:var(--relief)"></i>Relief score (R): break these first, nearest the edge first</span>
-          <span><i style="border-color:var(--amber)"></i>Start point and score number</span>
-        </div>
-      </div>
-      <div class="warns" id="warns"></div>
-      <div class="panel">
-        <div class="codehead">
-          <h3>G-code</h3>
-          <div class="btns">
-            <button class="btn" id="copyBtn" type="button">Copy</button>
-            <button class="btn primary" id="saveBtn" type="button" hidden>Save file</button>
-          </div>
-        </div>
-        <textarea id="gcode" readonly spellcheck="false" aria-label="Generated G-code"></textarea>
-      </div>
-      <p class="status" id="status">Saves as .txt. If your offline controller doesn't list it, rename to .nc.</p>
+      <details class="more" id="traceMore">
+        <summary>Pieces look wrong?</summary>
+        <div class="slider"><label for="thr">Line darkness</label><output id="thrV">128</output><input id="thr" type="range" min="10" max="245" value="128"><small>Move it if lines are missing or the background turns into lines.</small></div>
+        <div class="slider"><label for="gap">Close gaps</label><output id="gapV">1</output><input id="gap" type="range" min="0" max="6" value="1"><small>Raise it if two pieces got joined because a line has a gap.</small></div>
+        <div class="slider"><label for="smooth">Smooth curves</label><output id="smoothV">2</output><input id="smooth" type="range" min="0" max="4" value="2"><small>0 keeps every corner sharp.</small></div>
+        <div class="slider"><label for="minA">Ignore tiny specks</label><output id="minAV">30 mm²</output><input id="minA" type="range" min="0" max="200" step="5" value="30"><small>Shapes smaller than this are left out.</small></div>
+      </details>
     </div>
   </div>
-  <div id="svgHost" style="position:absolute; left:-10000px; top:0; width:10px; height:10px; overflow:hidden; visibility:hidden" aria-hidden="true"></div>
+  <div id="s1msg"></div>
+  <div class="nav"><span class="spacer"></span><button class="btn primary big" id="to2" disabled>Next: pick pieces →</button></div>
 </section>
 
-<!-- ============ BUILD ============ -->
-<section class="tab" id="tab-build" hidden>
-  <div class="guide">
-    <div class="prose">
-      <div class="block">
-        <h2>How the head works</h2>
-        <p>The head is five printed parts plus the QWORK cutter head. There's nothing else: no rod, bearing, metal spring, screw or clip.</p>
-        <ul>
-          <li><b>Body:</b> sits in the spindle clamp. Its long bushing at the bottom keeps the shaft upright.</li>
-          <li><b>Shaft:</b> drops in from the top. A flange stops it on the body's inner lip, so nothing has to hold it in. Its domed top is the swivel: only the centre of the dome carries the load, so it spins almost freely even under 3–5 kg, and that free spin lets the wheel steer. The split collet that holds the cutter is printed on its bottom end.</li>
-          <li><b>Spring:</b> a printed tube with staggered slots, whose rings bend like a stack of leaf springs. Its solid foot sits on the shaft's dome. It comes in three strengths (below).</li>
-          <li><b>Cap:</b> screws onto the top of the body and presses on the spring. This is the pressure adjustment. Each of its 12 grip flutes is 1/12 turn, or 0.25 mm.</li>
-          <li><b>Nut:</b> screws up the collet and grips the QWORK head, which sits 1.5 mm off-centre. The wheel trails behind the swivel like a shopping-cart caster, and the G-code page shifts every path by that offset.</li>
-        </ul>
-      </div>
-
-      <div class="block">
-        <h2>Measure two things first</h2>
-        <p>Measure both with calipers, enter them at the top of <code>qikglass_scoring_head.scad</code>, then export the STLs from free OpenSCAD. The included STLs use the defaults shown.</p>
-        <div class="measure">
-          <div><h3>Clamp bore</h3><p class="muted">Take the spindle out and measure the motor where the clamp grips it. A bare 775 is about 42 mm. Across its steel flux ring it's about 45.5 mm. Only the body changes.</p><p><code>clamp_d = 42.0</code></p></div>
-          <div><h3>Cutter-head shank</h3><p class="muted">Loosen the small screw on the handle, pull a head out, and measure the round part that sat inside the handle. Only the shaft changes.</p><p><code>head_shank_d = 7.0</code></p></div>
-        </div>
-      </div>
-
-      <div class="block">
-        <h2>Spring strength</h2>
-        <p>Print the medium spring first. These figures are estimates for PETG. Your printer and filament will shift them, so always check with the kitchen scale (see <em>Calibrate &amp; score</em>).</p>
-        <div class="tablewrap"><table>
-          <thead><tr><th>Spring</th><th>File</th><th>About</th><th>Max before it bottoms out</th><th>Use for</th></tr></thead>
-          <tbody>
-            <tr><td>Soft (S)</td><td><code>qikglass_spring_soft.stl</code></td><td class="q">0.5 kg/mm</td><td class="q">≈ 2 kg</td><td>Thin or soft glass, testing</td></tr>
-            <tr><td>Medium (M)</td><td><code>qikglass_spring_medium.stl</code></td><td class="q">0.9 kg/mm</td><td class="q">≈ 3.8 kg</td><td>Most 3 mm stained glass</td></tr>
-            <tr><td>Firm (F)</td><td><code>qikglass_spring_firm.stl</code></td><td class="q">1.6 kg/mm</td><td class="q">≈ 4.9 kg</td><td>Hard or textured glass, mirror</td></tr>
-          </tbody>
-        </table></div>
-        <p class="muted">The gaps between the rings close up before the plastic is overstrained, so the spring goes solid instead of breaking if Z goes too deep. If the force at the scale doesn't climb any more, it has bottomed out: use a firmer spring.</p>
-      </div>
-
-      <div class="block">
-        <h2>Print settings</h2>
-        <div class="tablewrap"><table>
-          <thead><tr><th>Part</th><th>Orientation</th><th>File</th></tr></thead>
-          <tbody>
-            <tr><td>Body</td><td>Upright, bushing down</td><td><code>qikglass_body.stl</code></td></tr>
-            <tr><td>Shaft</td><td>Upright, standing on the collet (already placed). 100% infill</td><td><code>qikglass_shaft.stl</code></td></tr>
-            <tr><td>Spring</td><td>Upright, foot down. PETG, 100% infill. The slots bridge</td><td><code>qikglass_spring_*.stl</code></td></tr>
-            <tr><td>Cap</td><td>Top face down (already flipped)</td><td><code>qikglass_cap.stl</code></td></tr>
-            <tr><td>Collet nut</td><td>Flat</td><td><code>qikglass_nut.stl</code></td></tr>
-            <tr><td>Zero pointer</td><td>Point up</td><td><code>qikglass_pointer.stl</code></td></tr>
-            <tr><td>Glass jig</td><td>Flat. 185 × 134 mm, fits a 200 mm print bed</td><td><code>qikglass_jig.stl</code></td></tr>
-            <tr><td>Pad stop</td><td>Flat</td><td><code>qikglass_padstop.stl</code></td></tr>
-          </tbody>
-        </table></div>
-        <p class="muted">PETG for everything is best, and the spring must be PETG, because PLA creeps and loses force. Use 0.2 mm layers and 4 walls, 40% infill unless noted. Fits are set by <code>bush_clr</code>, <code>slide_clr</code> and <code>thread_clr</code> in the CAD file. If the shaft binds, raise <code>bush_clr</code> by 0.1. If the wheel wobbles, lower it.</p>
-      </div>
-
-      <div class="block">
-        <h2>Assembly</h2>
-        <ol>
-          <li>Drop the shaft into the top of the body, collet end first, so it slides down through the bushing until its flange sits on the inner lip.</li>
-          <li>Drop the spring in on top, foot first. Its foot sits on the shaft's dome.</li>
-          <li>Screw the cap on until it just touches the spring. You'll take it off again to fit the head into the machine.</li>
-          <li>Push the QWORK head's shank up into the collet under the body. Turn it so the wheel's plane lines up with the two grooves on the shaft, then screw the nut up the collet until the head is gripped. If the wheel is turned sideways, it won't steer.</li>
-          <li>Push the collet up and let go: it should spring back. Spin it: it should turn freely. A drop of oil on the dome and in the bushing helps.</li>
-        </ol>
-      </div>
-
-      <div class="block">
-        <h2>Swapping spindle ⇄ glass head</h2>
-        <ol>
-          <li>Power down and unplug the spindle lead at the board.</li>
-          <li>Loosen the clamp and take the spindle out. Unscrew the cap (the spring can stay inside the body). Push the body up through the clamp from below until the threaded top sticks out above it, tighten the clamp, then screw the cap back on to your pressure setting.</li>
-          <li>Re-zero Z on the glass every time (see <em>Calibrate &amp; score</em>).</li>
-          <li>Going back: reverse this, plug the spindle in, and re-zero Z with a bit.</li>
-        </ol>
-        <img src="images/how-it-attaches.png" alt="Five steps: shaft dropped into the body from the top; spring dropped in on it; body pushed up through the spindle clamp with the cap screwed on top; QWORK cutter shank pushed up into the collet; nut screwed up to lock it, head ready above a sheet of glass" style="border-radius:8px; border:1px solid var(--line); background:#fff">
-        <p class="callout"><b>Never run a milling file with the glass head fitted.</b> Router files dive several millimetres deep and will bottom out the spring and break glass. Keep glass files in their own folder on the SD card.</p>
-      </div>
-    </div>
-
-    <figure class="aside" style="margin:0">
-      <img src="images/scoring-head-exploded.png" alt="Exploded view, top to bottom: pressure cap, printed slotted spring, flanged shaft with domed top and split collet, body with threaded top and bushing, collet nut">
-      <figcaption>The five parts in fitting order, top to bottom: cap, spring, shaft, body, collet nut. The shaft and spring drop into the body from the top, and the nut goes on from below.</figcaption>
-    </figure>
+<!-- STEP 2 -->
+<section class="card" id="s2" aria-labelledby="h2" hidden>
+  <h2 id="h2"><span class="n">2.</span> Tap the pieces to cut</h2>
+  <p class="lead">Tap a piece to pick it, tap again to drop it. Picked pieces turn orange.</p>
+  <div class="pickbar">
+    <button class="btn small" id="pickAll">Pick all that fit</button>
+    <button class="btn small" id="pickNone">Clear</button>
+    <span class="count" id="pickCount">0 picked</span>
   </div>
+  <div class="viewbox"><canvas id="pickCv" aria-label="Pieces. Tap to pick."></canvas></div>
+  <div class="legend"><span><i style="background:var(--pick-fill);border:2px solid var(--pick)"></i>Picked</span><span><i style="background:var(--piece-fill);border:2px solid var(--piece)"></i>Not picked</span><span><i style="background:var(--big-fill);border:2px dashed var(--big)"></i>Too big for the glass</span></div>
+  <div id="s2msg"></div>
+  <div class="nav"><button class="btn" data-back="1">← Back</button><span class="spacer"></span><button class="btn primary big" id="to3" disabled>Next: glass →</button></div>
 </section>
 
-<!-- ============ RUN ============ -->
-<section class="tab" id="tab-run" hidden>
-  <div class="prose" style="max-width:72ch">
-    <div class="block">
-      <h2>Your machine: connecting and checking settings</h2>
-      <p>This is from the CNC3-3018PRO manual and USB stick that came in the box. Its board is a Woodpecker v3.4 running GRBL 1.1f.</p>
-      <ol>
-        <li><b>Driver:</b> install <code>Software for Control the machine(3Axis)\Driver\CH340SER.EXE</code> once. The machine then shows up in Device Manager under Ports as <i>USB-SERIAL CH340 (COMx)</i>.</li>
-        <li><b>Candle:</b> run <code>Grblcontrol (Candle).exe</code> from the same folder. In Settings, pick that COM port at <b>115200</b> baud. The console shows <code>Grbl 1.1f ['$' for help]</code> when it's connected. Unplug the offline controller while you use the USB cable.</li>
-        <li><b>Check the speed limits:</b> type <code>$$</code> in Candle's console. Factory values are <code>$110=1000</code>, <code>$111=1000</code> (X and Y top speed, mm/min), <code>$112=800</code> and <code>$120</code>–<code>$122=30</code> (acceleration). The G-code page's default score feed of 900 stays under that. Leave these settings alone until the head is working.</li>
-        <li><b>Zeroing:</b> Candle's <i>zero XY</i> and <i>zero Z</i> buttons do the same as <code>G10 L20 P1 X0 Y0</code> and <code>Z0</code> in this guide. Jog with the arrows, using 0.1 or 0.01 mm steps near the glass.</li>
-        <li><b>Offline controller:</b> it reads <code>.nc</code> files, which the Save button makes. Plug the controller into a PC with its USB cable to copy files onto it, like a card reader. Then plug it into the board with the PC unplugged.</li>
-        <li><b>No limit switches:</b> the board has ports for them, but homing is off (<code>$22=0</code>). Use the zero pointer or park-and-power-off to find X0 Y0, as described below.</li>
-      </ol>
-      <p class="muted">The spindle clamp on this kit is a split plastic ring tightened by one bolt, and the manual warns not to overtighten it. Snug is enough for the printed body. Measure the ring's inside diameter for <code>clamp_d</code> before printing.</p>
-    </div>
+<!-- STEP 3 -->
+<section class="card" id="s3" aria-labelledby="h3t" hidden>
+  <h2 id="h3t"><span class="n">3.</span> Glass and cutter</h2>
+  <p class="lead">Tell QikGLASS what's going on the machine.</p>
 
-    <div class="block">
-      <h2>Put every blank in the same place</h2>
-      <p>The G-code always puts X0 Y0 at the blank's front-left corner, with the 6 in side running along X. Two things keep that repeatable: a jig that doesn't move, and a quick zeroing routine each time the machine is switched on.</p>
-      <h3>Fit the jig once</h3>
-      <img src="images/jig-on-bed.png" alt="The L-shaped jig bolted to the 3018's T-slot bed: the front rail's three bolts sit in one slot, the left rail's two bolts in the next two slots back. A 6 x 4 glass blank sits in the corner, and the separate pad stop at the right end of the front rail holds a small scrap of glass." style="border-radius:8px; border:1px solid var(--line); background:#fff">
-      <ol>
-        <li>The jig bolts straight onto the 3018's aluminium bed. No spoilboard is needed. The bed's T-slots run left to right (along X), 44 mm apart. You need six M6 bolts with T-nuts, the same size as the bed clamps (5.8 mm thread), 10–12 mm long, with washers.</li>
-        <li>Print <code>qikglass_jig.stl</code> and <code>qikglass_padstop.stl</code>. The jig is an L: the front rail runs along X and the left rail along Y. The pad stop is a small separate block that holds a 30 × 20 mm scrap of the same glass for the wheel-alignment pad.</li>
-        <li>Slide T-nuts into the front slot and bolt the front rail's three holes into that one slot. That lines the rail up with X. The left rail's two holes then land in the next two slots back, 44 mm apart (marked "44"). Keep the corner near the front-left of the bed, with at least 20 mm of travel left below X0 and Y0.</li>
-        <li>Push the pad stop against the end of the front rail and bolt it into the same slot. Its marked centre is X179.4 Y10, the G-code page's default Pad X and Pad Y.</li>
-        <li>Glue 2 mm felt or cork onto the bed inside the L, covering the glass area and the pad. Set <code>felt_t</code> in the CAD file to your felt's thickness before printing. The rails then stand 1.5 mm above the felt: high enough to stop the glass, low enough that the wheel never touches them.</li>
-        <li>Check it's square: fit the zero pointer (below), lower it just above the front rail's inside edge, and jog along X. The tip should follow the edge. If it drifts, loosen the bolts, nudge the rail and retighten.</li>
-      </ol>
-      <p class="muted">The bolt heads sit 14 mm outside the glass, clear of the cutter's fork and nut. If your slots are a different distance apart, change <code>slot_pitch</code> in the CAD file. If your bolts are a different size, change <code>bolt_d</code>.</p>
-      <h3>Zero X and Y</h3>
-      <p>The 3018 doesn't know where it is when it's switched on, so X0 Y0 has to be set at the jig corner. There are two ways to do it.</p>
-      <ol>
-        <li><b>Zero pointer (any time, most accurate):</b> unscrew the collet nut, take the QWORK head out and slide <code>qikglass_pointer.stl</code> up over the bottom of the shaft. Its tip sits exactly on the pivot axis, which is the point the G-code moves. Jog the tip into the jig's inside corner, just above the felt, and press the controller's XY zero (or send <code>G10 L20 P1 X0 Y0</code>). Take the pointer off, refit the cutter and nut, and zero Z on the glass as usual.</li>
-        <li><b>Park and power off (quick):</b> every QikGLASS file ends with the head parked at X0 Y0. Switch the machine off there, don't move the gantry by hand, and after switching on just press XY zero. Check it with the pointer every few sessions, or after anything bumps the machine.</li>
-      </ol>
-      <p class="muted">If your 3018 has limit switches, you can turn on homing (<code>$22=1</code>) and save the jig corner as a permanent work offset with <code>G10 L2 P1</code>. Then <code>$H</code> at power-up restores it with no touching off. This is optional. The routine above works without switches.</p>
-      <h3>Every blank</h3>
-      <ul>
-        <li>Brush the felt clean, then push the blank firmly into the jig corner, 6 in side along the front rail. The corner notch leaves room for a chipped corner.</li>
-        <li>Keep the scrap pad strip against its stop. Replace it when it's covered in scratches.</li>
-        <li>Any rectangle works in the jig, including the leftover strip from an earlier job. Set Glass blank to “Custom size” and type its width (along the front rail) and depth in inches or mm. After a job that saves a strip, “Use as next blank” fills the size in for you, and the page remembers it until next time. Glass wider than 160 mm hits the pad stop. Unbolt it for wider glass.</li>
-        <li>Zero Z on the glass surface (paper pinch), then run the file.</li>
-      </ul>
-    </div>
-
-    <div class="block">
-      <h2>Set the pressure with a kitchen scale</h2>
-      <ol>
-        <li>Screw the cap down until it just touches the spring, then a quarter turn more (3 flutes) so the spring has a little preload.</li>
-        <li>Put the scale on the bed under the wheel and tare it.</li>
-        <li>Jog Z down in 0.1 mm steps until the scale first jumps. Call that height "touch".</li>
-        <li>Keep stepping down until the scale reads about <b>3 kg</b>. The distance below "touch" is your <b>Score depth</b>. With the medium spring, expect about 3 mm.</li>
-        <li>Run a test on scrap. A good score is a thin, even, barely visible line that makes a steady hiss. White flakes or a gritty crunch mean too much pressure. Skips or a line that won't break mean too little. Adjust in 0.5 kg steps. Most stained glass lands at 3–5 kg.</li>
-        <li>For quick changes later, leave Score depth alone and turn the cap. Each flute adds about 0.25 mm, which is roughly 0.2 kg with the medium spring.</li>
-      </ol>
-      <p class="muted">If the scale stops climbing as you go deeper, the spring has gone solid: print the firm one. Printed springs relax a little over the first few sessions, so recheck with the scale after the first week.</p>
-    </div>
-
-    <div class="block">
-      <h2>Zero Z on the glass for every sheet</h2>
-      <p>Lay a strip of paper on the glass under the wheel and jog down until the paper is just pinched. Set Z0 there. The program then drives to Z −(score depth) and the spring supplies the force.</p>
-    </div>
-
-    <div class="block">
-      <h2>Draw scores the way glass breaks</h2>
-      <ul>
-        <li>Draw each score as one open line in Inkscape (document in mm, page = your sheet). Draw only score lines. Don't draw the sheet outline.</li>
-        <li>Each score runs from edge to edge, or ends where it meets an earlier score. Glass can't break along a line that stops in the middle of the sheet.</li>
-        <li>Never cross or retrace a score. The generator warns you if two lines cross.</li>
-        <li>Keep curves gentle. Deep inside curves need extra relief scores, as with hand cutting.</li>
-        <li>Break in the numbered order shown in the preview, running each score before the next one that ends on it.</li>
-      </ul>
-    </div>
-
-    <div class="block">
-      <h2>Pieces, 6 × 4 blanks and relief scores</h2>
-      <ul>
-        <li>Every job goes on a 6 × 4 in blank (152.4 × 101.6 mm). Push the blank into the jig corner so its front-left corner is X0 Y0.</li>
-        <li>With Layout set to “Pack bottom-left”, pieces fill a row from left to right starting at the front-left corner, then the next row up, with a gap between them. Pieces are turned 90° when that keeps the rows low. Turn this off for streaky glass with a grain. Any pieces that don't fit move onto blank 2, 3, and so on, each with its own G-code file.</li>
-        <li>The unused glass ends up as one strip along the back. The trim score T runs across the blank above the top row: break it first and keep the strip for another project. Relief scores stop at the trim line, so the strip stays clean.</li>
-        <li>A closed outline is treated as a piece, with everything outside it as waste. With Relief scores set to Auto, the page adds relief lines out to the glass edge: a pinwheel of tangent lines around circles and outside curves, extensions of each sharp outside corner, and a comb of parallel lines out of inside curves such as a semicircle bite.</li>
-        <li>Relief lines (purple, marked R) are scored after the outline and end on it without crossing it. Break them first, starting with the ones nearest the glass edge, using running pliers or grozers. Then run the piece outline.</li>
-        <li>Sharp corners are split into separate sides, because a swivel wheel can't turn on the spot. Sharp inside corners are flagged. Score up to them from both sides and finish with a grinder.</li>
-        <li>Cut neighbouring pieces from separate blanks. Two outlines a line-width apart leave a sliver that won't break, and the page warns you when that happens.</li>
-      </ul>
-    </div>
-
-    <div class="block">
-      <h2>Oil and running</h2>
-      <ul>
-        <li>The head has no reservoir once it's out of the handle. Touch a drop of cutting oil to the wheel before each sheet, or brush a thin film along the lines. Use the "Pause to re-oil" option for big sheets. It uses <code>M0</code>. If your offline controller ignores <code>M0</code>, run from a PC with Candle or UGS instead.</li>
-        <li>Files contain <code>M5</code> and never turn the spindle on, but keep it unplugged anyway.</li>
-        <li>Wear safety glasses. Handle sheets with cut-resistant gloves, and brush chips off the felt between sheets so the glass sits flat.</li>
-      </ul>
-    </div>
+  <h3>Which glass?</h3>
+  <div class="choices" id="glassChoices">
+    <button class="choice" data-glass="6x4" aria-pressed="true">
+      <svg viewBox="0 0 72 48" aria-hidden="true"><rect x="2" y="2" width="68" height="44" rx="3" fill="var(--glass)" stroke="var(--piece)" stroke-width="2"/></svg>
+      <b>6 × 4 in</b><small>A full piece. Long side goes left to right.</small></button>
+    <button class="choice" data-glass="left" aria-pressed="false" id="leftChoice" hidden>
+      <svg viewBox="0 0 72 48" aria-hidden="true"><rect x="2" y="30" width="68" height="16" rx="3" fill="var(--keep)" stroke="var(--trim)" stroke-width="2"/></svg>
+      <b>Leftover strip</b><small id="leftTxt"></small></button>
+    <button class="choice" data-glass="custom" aria-pressed="false">
+      <svg viewBox="0 0 72 48" aria-hidden="true"><rect x="2" y="10" width="50" height="34" rx="3" fill="var(--glass)" stroke="var(--piece)" stroke-width="2" stroke-dasharray="5 4"/></svg>
+      <b>Another size</b><small>Type the width and depth.</small></button>
   </div>
+  <div class="custom" id="customRow" hidden>
+    <input id="cw" type="number" step="0.1" min="0.5" value="5" aria-label="Width, left to right"> <span>wide ×</span>
+    <input id="ch" type="number" step="0.1" min="0.5" value="3" aria-label="Depth, front to back"> <span>deep</span>
+    <div class="seg" role="group" aria-label="Units"><button data-cunit="in" aria-pressed="true">in</button><button data-cunit="mm" aria-pressed="false">mm</button></div>
+  </div>
+
+  <h3>Cutter</h3>
+  <div class="choices">
+    <div class="choice fixed" aria-pressed="true">
+      <svg viewBox="0 0 72 48" aria-hidden="true"><rect x="22" y="2" width="28" height="16" rx="3" fill="var(--sunk)" stroke="var(--muted)" stroke-width="2"/><circle cx="36" cy="10" r="5" fill="none" stroke="var(--muted)" stroke-width="2"/><rect x="31" y="18" width="12" height="18" rx="2" fill="var(--pick)"/><circle cx="38" cy="40" r="5" fill="var(--muted)"/></svg>
+      <b>Swivel holder</b><small>Two 608 bearings. The wheel trails 1.5 mm and steers itself.</small></div>
+  </div>
+
+  <h3>How hard to press</h3>
+  <div class="slider">
+    <label for="depth">Score depth</label><output id="depthV">0.20 mm</output>
+    <input id="depth" type="range" min="0.05" max="0.5" step="0.05" value="0.2">
+    <small id="depthHint">The holder has no spring, so pushing deeper presses harder. Use the best line from glass test A. A good score is a thin, even line that whispers, not crunches.</small>
+  </div>
+
+  <h3>Helpers</h3>
+  <label class="toggle"><input type="checkbox" id="relief" checked><span class="sw"></span><span><b>Add relief cuts</b><small>Extra purple lines around curves so the glass breaks away in small bits. Leave this on for circles and curves.</small></span></label>
+  <label class="toggle"><input type="checkbox" id="trim" checked><span class="sw"></span><span><b>Save the leftover strip</b><small>A green line across the top so the unused glass snaps off in one handy strip.</small></span></label>
+  <div class="field"><span class="flabel">Speed</span>
+    <div class="seg" role="group" aria-label="Speed" id="speedSeg"><button data-speed="400" aria-pressed="false">Slow</button><button data-speed="600" aria-pressed="true">Normal</button><button data-speed="900" aria-pressed="false">Fast</button></div>
+    <small>Slow is best while you're learning, and for small curvy pieces.</small></div>
+
+  <details class="more">
+    <summary>Grown-up settings</summary>
+    <div class="grid2">
+      <div class="field"><label for="caster">Wheel offset (mm)</label><input id="caster" type="number" step="0.1" min="0" value="1.5"><small>Match <code>caster</code> in the swivel CAD file.</small></div>
+      <div class="field"><label for="gapmm">Space between pieces (mm)</label><input id="gapmm" type="number" step="1" min="2" value="6"><small>Room to break them apart.</small></div>
+      <div class="field"><label for="margin">Edge margin (mm)</label><input id="margin" type="number" step="1" min="0" value="5"><small>Keep pieces this far from the glass edge.</small></div>
+      <div class="field"><label for="travel">Lift height (mm)</label><input id="travel" type="number" step="0.5" min="0.5" value="3"><small>How high the wheel lifts between cuts.</small></div>
+      <div class="field"><label for="density">Relief cuts</label><select id="density"><option value="light">Fewer</option><option value="normal" selected>Normal</option><option value="dense">More</option></select></div>
+      <div class="field"><label for="turnSel">Turn pieces to fit</label><select id="turnSel"><option value="yes" selected>Yes</option><option value="no">No (glass has a grain)</option></select></div>
+      <div class="field"><label for="alignSel">Line the wheel up first</label><select id="alignSel"><option value="none" selected>No</option><option value="pad">Yes, on a scrap pad</option></select><small>Needs the pad stop and a scrap of glass at X179.4 Y10.</small></div>
+      <div class="field"><label for="oil">Pause to re-oil every</label><input id="oil" type="number" step="1" min="0" value="0"><small>Number of cuts. 0 = never.</small></div>
+    </div>
+  </details>
+  <div class="nav"><button class="btn" data-back="2">← Back</button><span class="spacer"></span><button class="btn primary big" id="to4">Make my file →</button></div>
 </section>
+
+<!-- STEP 4 -->
+<section class="card" id="s4" aria-labelledby="h4" hidden>
+  <h2 id="h4"><span class="n">4.</span> Check it and save</h2>
+  <p class="lead">This is exactly what the wheel will draw on your glass.</p>
+  <div class="sheets" id="sheetTabs" role="group" aria-label="Glass sheets"></div>
+  <div class="viewbox"><canvas id="jobCv" aria-label="Preview of the cuts on the glass"></canvas></div>
+  <div class="legend"><span><i style="background:var(--piece)"></i>Your pieces</span><span><i style="background:var(--relief)"></i>Relief cuts</span><span><i style="background:var(--trim)"></i>Leftover line</span><span><i style="background:var(--keep);border:1px solid var(--trim)"></i>Strip you keep</span></div>
+  <div class="stats" id="stats"></div>
+  <div id="warns"></div>
+  <div class="save">
+    <button class="btn primary big" id="saveBtn">⬇ Save the cut file</button>
+    <button class="btn" id="saveAllBtn" hidden>Save all sheets</button>
+    <span class="fn" id="fnTxt"></span>
+  </div>
+
+  <h3>At the machine</h3>
+  <ol class="check" id="checklist">
+    <li><span>Copy the <b>.nc</b> file onto the controller's SD card, or open it in Candle.</span><input type="checkbox" aria-label="Done"></li>
+    <li><span>Screw the QWORK head into the swivel holder and clamp the holder in the spindle mount.</span><input type="checkbox" aria-label="Done"></li>
+    <li><span>Push the glass into the corner of the jig, smooth side up, long side left to right.</span><input type="checkbox" aria-label="Done"></li>
+    <li><span>Move the wheel to the jig corner and set <b>X</b> and <b>Y</b> to zero.</span><input type="checkbox" aria-label="Done"></li>
+    <li><span>Lower the wheel until it just pinches a sheet of paper on the glass. Set <b>Z</b> to zero.</span><input type="checkbox" aria-label="Done"></li>
+    <li><span>Put a few drops of oil in the oil cup.</span><input type="checkbox" aria-label="Done"></li>
+    <li><span>Wear safety glasses, start the file, and keep fingers away while it runs.</span><input type="checkbox" aria-label="Done"></li>
+    <li><span>Break the glass in this order: the <span class="chip c-trim">green</span> leftover line first (keep that strip!), then the <span class="chip c-rel">purple</span> relief cuts, then your <span class="chip c-pc">blue</span> pieces.</span><input type="checkbox" aria-label="Done"></li>
+  </ol>
+  <details class="more"><summary>Show the G-code</summary><pre class="gcode" id="gcode"></pre></details>
+  <div class="nav"><button class="btn" data-back="3">← Back</button><span class="spacer"></span><button class="btn" id="restart">Start a new picture</button></div>
+</section>
+</main>
+<footer>Made for the CNCTOPBAOS 3018-PRO with a QWORK cutter head · <a href="https://github.com/BelvedereEm/QikGLASS">Project on GitHub</a></footer>
 </div>
+<div id="svgHost" aria-hidden="true"></div>
 
 <script>
 (() => {
 const $ = id => document.getElementById(id);
-const SAMPLE = `<svg xmlns="http://www.w3.org/2000/svg" width="152.4mm" height="101.6mm" viewBox="0 0 152.4 101.6">
-<g fill="none" stroke="#000" stroke-width="0.5">
-<circle cx="46" cy="51" r="24"/>
-<path d="M88,20 L132,20 L132,84 L88,84 L88,70 A17.5,17.5 0 0 0 88,35 Z"/>
-</g></svg>`;
 const MACHINE = {w:300, h:180, maxFeed:1000, maxZ:800};   // 3018-PRO factory GRBL: $110/$111 = 1000, $112 = 800 mm/min
-
-// ---------- tabs ----------
-const tabs = [...document.querySelectorAll('nav button')];
-function showTab(name){
-  tabs.forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === name)));
-  ['gcode','build','run'].forEach(t => $('tab-'+t).hidden = t !== name);
-  try{ localStorage.setItem('qg-tab', name) }catch(e){}
-  if (name === 'gcode') draw();
-}
-tabs.forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
-
-// ---------- SVG parsing ----------
+// ---------- SVG parsing (from advanced.html) ----------
 function lenToMm(s){
   if (!s) return null;
   const m = String(s).trim().match(/^([\d.eE+-]+)\s*(mm|cm|in|pt|pc|px)?$/);
@@ -529,7 +431,6 @@ function rdp(pts, tol){
   }
   return pts.filter((_,i) => keep[i]);
 }
-
 // ---------- geometry ----------
 const dist = (a,b) => Math.hypot(b[0]-a[0], b[1]-a[1]);
 function dedupe(p){ const o=[p[0]]; for (let i=1;i<p.length;i++) if (dist(o[o.length-1],p[i])>1e-4) o.push(p[i]); return o; }
@@ -580,25 +481,9 @@ function segX(a,b,c,d){
   return (t>=0&&t<=1&&u>=0&&u<=1) ? [a[0]+t*r[0], a[1]+t*r[1]] : null;
 }
 function bbox(p){ let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity; for (const [x,y] of p){ if(x<x0)x0=x; if(y<y0)y0=y; if(x>x1)x1=x; if(y>y1)y1=y; } return {x0,y0,x1,y1}; }
-
-// ---------- build job ----------
-let src = null, job = null, fileBase = 'glass-scores';
-function num(id){ const v = parseFloat($(id).value); return isFinite(v) ? v : 0; }
 function f1(v){ return (Math.round(v*10)/10).toString(); }
 function f(v){ return (Math.round(v*1000)/1000).toFixed(3).replace(/\.?0+$/,'') || '0'; }
-
 const JIG = {maxW: 160, maxH: 170};   // pad stop on the jig sits at X162; Y travel limit
-function glassWH(g){
-  if (g === 'custom'){
-    const k = $('cunit').value === 'in' ? 25.4 : 1;
-    return [Math.max(12.7, num('cw')*k), Math.max(12.7, num('ch')*k)];
-  }
-  return [152.4, 101.6];
-}
-function glassName(g, W, H){
-  if (g === '6x4') return '6 × 4 in';
-  return $('cunit').value === 'in' ? `${+(W/25.4).toFixed(2)} × ${+(H/25.4).toFixed(2)} in` : `${f1(W)} × ${f1(H)} mm`;
-}
 const DENSITY = {light:{step:60, gap:14}, normal:{step:45, gap:10}, dense:{step:30, gap:7}};
 const DEG = Math.PI/180;
 function rotPts(p, rot){ return rot ? p.map(([x,y]) => [y, -x]) : p; }
@@ -738,7 +623,7 @@ function packPieces(contact, W, H, o){
   const isClosed = p => dist(p[0], p[p.length-1]) < 0.05 && p.length > 3;
   const units = [], open = [];
   let pc = 0;
-  contact.forEach(p => { if (isClosed(p)) units.push({paths:[p], label:`Piece ${++pc}`}); else open.push(p); });
+  contact.forEach((p, ci) => { if (isClosed(p)) units.push({paths:[p], label:(o.names && o.names[ci]) || `Piece ${++pc}`}); else open.push(p); });
   if (open.length) units.push({paths:open, label:'The open lines', open:true});
   const tooBig = [];
   units.forEach((u, i) => {
@@ -779,84 +664,157 @@ function packPieces(contact, W, H, o){
   });
   return {blanks, tooBig};
 }
-
-function build(){
-  if (!src) return;
-  const o = {
-    depth: Math.abs(num('depth')), travel: Math.max(0.5, num('travel')), feed: Math.max(10, num('feed')), plunge: Math.max(10, num('plunge')),
-    r: Math.max(0, num('caster')), align: $('align').value, padx: num('padx'), pady: num('pady'), stroke: Math.max(0, num('stroke')),
-    inset: Math.max(0, num('inset')), leadout: Math.max(0, num('leadout')), origin: $('origin').value, scale: num('scale')/100 || 1, oil: Math.max(0, Math.floor(num('oil'))),
-    glass: $('glass').value, rot: $('rot').value === '90', margin: Math.max(0, num('margin')), relief: $('relief').value, dens: DENSITY[$('density').value] || DENSITY.normal, split: $('split').value === 'split',
-    layout: $('layout').value, gap: Math.max(2, num('gap')), turn: $('turn').value === 'yes', trim: $('trim').value === 'yes'
-  };
-  document.querySelectorAll('[data-for]').forEach(el => { el.hidden = o.glass === 'page' || el.dataset.for !== o.layout; });
-  if (o.glass === 'page') document.querySelectorAll('[data-for="keep"]').forEach(el => el.hidden = false);
-  const warns = [];
-  const nest = o.layout === 'nest' && o.glass !== 'page';
-  let contact = src.paths.map(p => rotPts(p.pts.map(([x,y]) => [x*o.scale, y*o.scale]), o.rot && !nest));
-  let pack = null, trimY = null;
-  let sheet;
-  if (o.glass === 'page'){
-    let ox = 0, oy = 0;
-    const pw = src.sheet.w*o.scale, ph = src.sheet.h*o.scale;
-    let pageBox = rotPts([[0,0],[pw,ph]], o.rot); const pb = bbox(pageBox);
-    ox = pb.x0; oy = pb.y0;
-    if (o.origin === 'drawing' && contact.length){ const b = bbox(contact.flat()); ox = b.x0; oy = b.y0; }
-    contact = contact.map(p => p.map(([x,y]) => [x-ox, y-oy]));
-    sheet = {x:pb.x0-ox, y:pb.y0-oy, w:pb.x1-pb.x0, h:pb.y1-pb.y0};
-  } else {
-    const [W, H] = glassWH(o.glass);
-    if (W > JIG.maxW) warns.push(`This glass is ${f1(W)} mm wide. The jig's pad stop is at 162 mm, so glass wider than ${JIG.maxW} mm hits it. Unbolt the pad stop and set Pre-align to Off, or trim the glass.`);
-    if (H > JIG.maxH) warns.push(`This glass is ${f1(H)} mm deep, more than the 3018 can reach from the jig corner. Trim it to ${JIG.maxH} mm or less.`);
-    if (W < 2*o.margin + 5 || H < 2*o.margin + 5) warns.push('This glass is too small for the edge margin. Lower the margin or use a bigger piece.');
-    if (nest && contact.length){
-      const res = packPieces(contact.map(p => dedupe(p)), W, H, o);
-      res.tooBig.forEach(t => warns.push(t));
-      const nb = Math.max(1, res.blanks.length), sel = $('blank');
-      if (sel.options.length !== nb){ const keepK = +sel.value || 0; sel.innerHTML = Array.from({length:nb}, (_, i) => `<option value="${i}">${i+1} of ${nb}</option>`).join(''); sel.value = String(Math.min(keepK, nb-1)); }
-      $('blankRow').hidden = nb < 2;
-      const k = Math.min(nb-1, +sel.value || 0), bl = res.blanks[k];
-      contact = bl ? bl.paths : [];
-      pack = {n: nb, k, count: bl ? bl.items.length : 0, top: bl ? bl.top : 0};
-      if (bl && o.trim && H - (bl.top + o.gap) >= 12) trimY = bl.top + o.gap;
-      if (nb > 1) warns.push(`These pieces need ${nb} blanks. You're viewing blank ${k+1}. Save a G-code file for each blank using the Blank menu.`);
-    } else if (contact.length){
-      const b = bbox(contact.flat()), cx = (b.x0+b.x1)/2, cy = (b.y0+b.y1)/2;
-      contact = contact.map(p => p.map(([x,y]) => [x - cx + W/2, y - cy + H/2]));
-      const bw = b.x1-b.x0, bh = b.y1-b.y0, iw = W-2*o.margin, ih = H-2*o.margin;
-      if (bw > iw + 0.05 || bh > ih + 0.05){
-        const fitsTurned = bh <= iw && bw <= ih;
-        warns.push(`The pattern is ${f1(bw)} × ${f1(bh)} mm, but a ${glassName(o.glass, W, H)} blank only holds ${f1(iw)} × ${f1(ih)} mm inside the ${f1(o.margin)} mm margin. ${fitsTurned ? 'Rotating it 90° makes it fit.' : 'Use “Fit pattern to glass”, or select fewer lines.'}`);
-      }
-    }
-    sheet = {x:0, y:0, w:W, h:H};
+// ---------- picture tracing (from trace.html) ----------
+const Tracer = (() => {
+let gray = null, gw = 0, gh = 0;
+function otsu(gray){
+  const hist = new Array(256).fill(0); for (const v of gray) hist[v]++;
+  const total = gray.length; let sum = 0; for (let i = 0; i < 256; i++) sum += i*hist[i];
+  let sumB = 0, wB = 0, best = 0, t = 128;
+  for (let i = 0; i < 256; i++){
+    wB += hist[i]; if (!wB) continue; const wF = total - wB; if (!wF) break;
+    sumB += i*hist[i]; const mB = sumB/wB, mF = (sum-sumB)/wF, v = wB*wF*(mB-mF)*(mB-mF);
+    if (v > best){ best = v; t = i; }
   }
-  contact = contact.map(p => dedupe(p)).filter(p => p.length > 1 && pathLen(p) > 0.5);
-  const W = sheet.x + sheet.w, H = sheet.y + sheet.h, reliefH = trimY != null ? trimY : H;
-  const nearEdge = pt => pt[0] - sheet.x < 2 || pt[1] - sheet.y < 2 || W - pt[0] < 2 || H - pt[1] < 2;
+  return t;
+}
+// crack-following around one 4-connected region; vertices at pixel corners, region kept on the right
+function boundary(lab, id, first){
+  const inR = (x,y) => x >= 0 && y >= 0 && x < gw && y < gh && lab[y*gw+x] === id;
+  const sx = first % gw, sy = (first / gw) | 0;
+  const pts = [[sx, sy]]; let x = sx, y = sy, d = 0, guard = 0;
+  const AHEAD = [ [[0,0],[0,-1]], [[-1,0],[0,0]], [[-1,-1],[-1,0]], [[0,-1],[-1,-1]] ]; // [right, left] pixel offsets per direction
+  const STEP = [[1,0],[0,1],[-1,0],[0,-1]];
+  do {
+    const [[rx,ry],[lx,ly]] = AHEAD[d];
+    const R = inR(x+rx, y+ry), L = inR(x+lx, y+ly);
+    if (R){ if (L) d = (d+3)%4; } else d = (d+1)%4;
+    x += STEP[d][0]; y += STEP[d][1];
+    const last = pts[pts.length-1], prev = pts[pts.length-2];
+    if (prev && (prev[0] === last[0] && last[0] === x || prev[1] === last[1] && last[1] === y)) pts[pts.length-1] = [x,y]; else pts.push([x,y]);
+  } while ((x !== sx || y !== sy) && ++guard < 4*gw*gh);
+  if (pts.length > 1 && pts[pts.length-1][0] === sx && pts[pts.length-1][1] === sy) pts.pop();
+  return pts;
+}
+function rdpOpen(pts, tol){
+  if (pts.length < 3) return pts;
+  const keep = new Uint8Array(pts.length); keep[0] = keep[pts.length-1] = 1;
+  const st = [[0, pts.length-1]];
+  while (st.length){
+    const [a,b] = st.pop(), [ax,ay] = pts[a], [bx,by] = pts[b], dx = bx-ax, dy = by-ay, len = Math.hypot(dx,dy) || 1e-9;
+    let dm = 0, idx = -1;
+    for (let i = a+1; i < b; i++){ const dd = Math.abs(dy*(pts[i][0]-ax) - dx*(pts[i][1]-ay))/len; if (dd > dm){ dm = dd; idx = i; } }
+    if (dm > tol){ keep[idx] = 1; st.push([a,idx],[idx,b]); }
+  }
+  return pts.filter((_,i) => keep[i]);
+}
+function rdp(poly, tol){   // closed polygon: split at the vertex farthest from the first
+  if (poly.length < 4) return poly;
+  let far = 1, fd = 0;
+  poly.forEach((p,i) => { const d = Math.hypot(p[0]-poly[0][0], p[1]-poly[0][1]); if (d > fd){ fd = d; far = i; } });
+  const a = rdpOpen(poly.slice(0, far+1), tol), b = rdpOpen([...poly.slice(far), poly[0]], tol);
+  return [...a.slice(0,-1), ...b.slice(0,-1)];
+}
+function subdivide(p, maxLen){
+  const o = [];
+  for (let i = 0; i < p.length; i++){ const a = p[i], b = p[(i+1)%p.length], k = Math.max(1, Math.ceil(Math.hypot(b[0]-a[0], b[1]-a[1])/maxLen)); for (let j = 0; j < k; j++) o.push([a[0]+(b[0]-a[0])*j/k, a[1]+(b[1]-a[1])*j/k]); }
+  return o;
+}
+function chaikin(p){
+  const n = p.length, o = [];
+  for (let i = 0; i < n; i++){
+    const a = p[(i-1+n)%n], b = p[i], c = p[(i+1)%n];
+    const u = [b[0]-a[0], b[1]-a[1]], v = [c[0]-b[0], c[1]-b[1]];
+    const turn = Math.abs(Math.atan2(u[0]*v[1]-u[1]*v[0], u[0]*v[0]+u[1]*v[1]));
+    if (turn > 50*Math.PI/180 || b.corner){ const k = [b[0], b[1]]; k.corner = true; o.push(k); continue; }
+    o.push([b[0]*.75+a[0]*.25, b[1]*.75+a[1]*.25], [b[0]*.75+c[0]*.25, b[1]*.75+c[1]*.25]);
+  }
+  return o;
+}
+function load(canvas){
+  gw = canvas.width; gh = canvas.height;
+  const d = canvas.getContext('2d', {willReadFrequently:true}).getImageData(0, 0, gw, gh).data;
+  gray = new Uint8Array(gw*gh);
+  for (let i = 0, j = 0; i < gray.length; i++, j += 4) gray[i] = (d[j]*299 + d[j+1]*587 + d[j+2]*114)/1000 | 0;
+}
+// Find every enclosed light area. Returns outlines in pixels (y down).
+function trace({thr, gap, smooth, minPx}){
+  const N = gw*gh;
+  let dark = new Uint8Array(N);
+  for (let i = 0; i < N; i++) dark[i] = gray[i] < thr ? 1 : 0;
+  for (let pass = 0; pass < gap; pass++){
+    const t = new Uint8Array(N);
+    for (let y = 0; y < gh; y++) for (let x = 0; x < gw; x++){ const i = y*gw+x; t[i] = dark[i] || (x>0 && dark[i-1]) || (x<gw-1 && dark[i+1]); }
+    const t2 = new Uint8Array(N);
+    for (let y = 0; y < gh; y++) for (let x = 0; x < gw; x++){ const i = y*gw+x; t2[i] = t[i] || (y>0 && t[i-gw]) || (y<gh-1 && t[i+gw]); }
+    dark = t2;
+  }
+  const lab = new Int32Array(N), regions = [], stack = new Int32Array(N);
+  for (let s = 0; s < N; s++){
+    if (dark[s] || lab[s]) continue;
+    const id = regions.length + 1; let sp = 0; stack[sp++] = s; lab[s] = id;
+    let area = 0, border = false, first = s;
+    while (sp){
+      const i = stack[--sp], x = i % gw, y = (i / gw) | 0; area++;
+      if (x === 0 || y === 0 || x === gw-1 || y === gh-1) border = true;
+      if (i < first) first = i;
+      if (x > 0 && !dark[i-1] && !lab[i-1]){ lab[i-1] = id; stack[sp++] = i-1; }
+      if (x < gw-1 && !dark[i+1] && !lab[i+1]){ lab[i+1] = id; stack[sp++] = i+1; }
+      if (y > 0 && !dark[i-gw] && !lab[i-gw]){ lab[i-gw] = id; stack[sp++] = i-gw; }
+      if (y < gh-1 && !dark[i+gw] && !lab[i+gw]){ lab[i+gw] = id; stack[sp++] = i+gw; }
+    }
+    regions.push({id, area, border, first});
+  }
+  const out = [];
+  for (const r of regions){
+    if (r.area < minPx || r.border) continue;          // the background around the picture is not a piece
+    let poly = boundary(lab, r.id, r.first);
+    poly = rdp(poly, 1.2);
+    for (let k = 0; k < smooth; k++) poly = chaikin(poly);
+    if (smooth) poly = rdp(poly, 0.25);
+    if (poly.length >= 3) out.push(poly);
+  }
+  return out;
+}
+return {load, trace, otsu: () => otsu(gray)};
+})();
 
-  // pieces (closed) vs lines (open); split at sharp corners
+// ---------- build one sheet of the job ----------
+// pieces: [{pts (closed, mm, y up), name}]. o: options. k: which sheet.
+function buildJob(pieces, o, k){
+  const W = o.W, H = o.H, warns = [];
+  if (o.align === 'pad' && o.r > 0 && W > JIG.maxW) warns.push(`This glass is ${f1(W)} mm wide, so it would hit the pad stop. Take the pad stop off and set “Line the wheel up first” to No.`);
+  if (H > JIG.maxH) warns.push(`This glass is ${f1(H)} mm deep. The machine can only reach ${JIG.maxH} mm back from the jig corner, so trim the glass first.`);
+  if (W < 2*o.margin + 5 || H < 2*o.margin + 5) warns.push('This glass is too small. Use a bigger piece, or a smaller edge margin.');
+  const res = packPieces(pieces.map(p => dedupe(p.pts)), W, H, {...o, names: pieces.map(p => p.name)});
+  const nb = res.blanks.length;
+  if (!nb) return {nb:0, warns:[...warns, ...res.tooBig], scores:[], sheet:{x:0, y:0, w:W, h:H}, o};
+  k = Math.max(0, Math.min(nb-1, k|0));
+  const bl = res.blanks[k];
+  const trimY = o.trim && H - (bl.top + o.gap) >= 12 ? bl.top + o.gap : null;
+  const sheet = {x:0, y:0, w:W, h:H}, reliefH = trimY != null ? trimY : H;
+  const contact = bl.paths.map((p, i) => { const q = dedupe(p); q._label = bl.items[i] ? bl.items[i].u.label : 'A line'; return q; }).filter(p => p.length > 1 && pathLen(p) > 0.5);
+  const nearEdge = pt => pt[0] < 2 || pt[1] < 2 || W - pt[0] < 2 || H - pt[1] < 2;
+
   const obstacles = contact.map(p => ({pts:p, bb:bbox(p)}));
   const parts = [];
   if (trimY != null) parts.push({pts:[[0, trimY], [W, trimY]], closed:false, relief:false, trim:true});
-  let pieceNo = 0;
   contact.forEach(p => {
     const closed = dist(p[0], p[p.length-1]) < 0.05 && p.length > 3;
-    const label = closed ? `Piece ${++pieceNo}` : 'A line';
     const segs = o.split ? splitCorners(p, closed, 25*DEG) : [p];
-    segs.forEach(sg => parts.push({pts:sg, closed: closed && segs.length === 1 && sg === p, relief:false}));
-    p._closed = closed; p._label = label;
+    segs.forEach(sg => parts.push({pts:sg, closed: closed && segs.length === 1 && sg === p, relief:false, label:p._label}));
+    p._closed = closed;
   });
   const notes = [];
-  if (o.relief === 'auto'){
+  if (o.relief){
     contact.filter(p => p._closed).forEach(p => {
       reliefsFor(p, W, reliefH, obstacles, o.dens, notes, p._label).forEach(ln => parts.push({pts:ln, closed:false, relief:true}));
     });
   }
   [...new Set(notes)].forEach(t => warns.push(t));
 
-  let rn = 0;
-  const scores = parts.map((pt, i) => {
+  let rn = 0, sn = 0;
+  const scores = parts.map(pt => {
     let c = pt.pts;
     if (!pt.closed){
       if (nearEdge(c[0])) c = trimStart(c, o.inset);
@@ -864,13 +822,12 @@ function build(){
     }
     c = dedupe(c);
     const {path} = casterComp(c, o.r);
-    const sharp = o.r > 0 ? findCorners(c, pt.closed, 25*DEG).corners.length : 0;
-    const n = i+1, tag = pt.trim ? 'T' : pt.relief ? 'R' + (++rn) : String(trimY != null ? n-1 : n);
-    if (sharp) warns.push(`Score ${tag} has ${sharp} sharp corner${sharp>1?'s':''}. The wheel will skid as it pivots there. Set “Sharp corners” to Split, or round the corner off.`);
-    return {n, tag, relief:pt.relief, trim:!!pt.trim, contact:c, pivot:path, closed:pt.closed, len:pathLen(c), t0:unit(c[0], c[1])};
+    const tag = pt.trim ? 'T' : pt.relief ? 'R' + (++rn) : String(++sn);
+    return {tag, relief:pt.relief, trim:!!pt.trim, label:pt.label, contact:c, pivot:path, closed:pt.closed, len:pathLen(c), t0:unit(c[0], c[1])};
   }).filter(s => s.contact.length > 1);
 
-  // crossings (ignore meetings within 1.5 mm of a line's ends, which are T-junctions)
+  // crossings (meetings within 1.5 mm of a line's ends are T-junctions, which are fine)
+  const crossed = new Set();
   for (let i = 0; i < scores.length; i++) for (let j = 0; j < i; j++){
     const A = scores[i].contact, B = scores[j].contact, ba = bbox(A), bb = bbox(B);
     if (ba.x1 < bb.x0 || bb.x1 < ba.x0 || ba.y1 < bb.y0 || bb.y1 < ba.y0) continue;
@@ -879,9 +836,12 @@ function build(){
       const x = segX(A[a-1], A[a], B[b-1], B[b]);
       if (x && dist(x,A[0])>1.5 && dist(x,A[A.length-1])>1.5 && dist(x,B[0])>1.5 && dist(x,B[B.length-1])>1.5){ hit = x; break outer; }
     }
-    if (hit) warns.push(`Score ${scores[i].tag} crosses score ${scores[j].tag} near X${f(hit[0])} Y${f(hit[1])}. Crossing an existing score chips the glass and ruins the break.`);
+    if (hit){
+      const who = [scores[i], scores[j]].map(s => s.trim ? 'the leftover line' : s.relief ? 'a relief cut' : s.label || 'a line');
+      const key = who.sort().join('|');
+      if (!crossed.has(key)){ crossed.add(key); warns.push(`Two cuts cross (${who[0]} and ${who[1]}). Glass chips where cuts cross, so the break may not be clean.`); }
+    }
   }
-  // neighbouring pieces too close together leave a sliver that can't be broken out
   const closedPieces = contact.filter(p => p._closed);
   for (let i = 0; i < closedPieces.length; i++) for (let j = 0; j < i; j++){
     const A = resampleClosed(closedPieces[i], 1), B = closedPieces[j], bb = bbox(B);
@@ -889,43 +849,41 @@ function build(){
     for (const pt of A){
       if (pt[0] < bb.x0-4 || pt[0] > bb.x1+4 || pt[1] < bb.y0-4 || pt[1] > bb.y1+4) continue;
       let dmin = Infinity;
-      for (let k = 1; k < B.length && dmin >= 4; k++){
-        const a = B[k-1], b = B[k], vx = b[0]-a[0], vy = b[1]-a[1], L2 = vx*vx+vy*vy || 1e-9;
+      for (let q = 1; q < B.length && dmin >= 4; q++){
+        const a = B[q-1], b = B[q], vx = b[0]-a[0], vy = b[1]-a[1], L2 = vx*vx+vy*vy || 1e-9;
         const t = Math.max(0, Math.min(1, ((pt[0]-a[0])*vx + (pt[1]-a[1])*vy)/L2));
         dmin = Math.min(dmin, Math.hypot(pt[0]-a[0]-t*vx, pt[1]-a[1]-t*vy));
       }
       if (dmin < 4) near++;
     }
-    if (near > 10) warns.push(`${closedPieces[i]._label} and ${closedPieces[j]._label} sit less than 4 mm apart for about ${near} mm. That sliver won't break out cleanly. Cut them from separate 6 × 4 blanks, or join them into one piece.`);
+    if (near > 10) warns.push(`${closedPieces[i]._label} and ${closedPieces[j]._label} are very close together. Make the space between pieces bigger in Grown-up settings.`);
   }
-  if (o.glass !== 'page'){
-    const out = scores.filter(s => !s.relief && s.contact.some(([x,y]) => x < -0.05 || y < -0.05 || x > W+0.05 || y > H+0.05)).length;
-    if (out) warns.push(`${out} score${out>1?'s run':' runs'} off the glass blank and will be scored in thin air or on the jig.`);
-  }
+  const off = scores.filter(s => !s.relief && s.contact.some(([x,y]) => x < -0.05 || y < -0.05 || x > W+0.05 || y > H+0.05)).length;
+  if (off) warns.push(`${off} cut${off>1?'s go':' goes'} off the edge of the glass.`);
 
   // G-code
   const g = [];
-  g.push('(QikGLASS scoring job - generated ' + new Date().toISOString().slice(0,10) + ')');
-  g.push(`(Scores: ${scores.length} incl. ${rn} relief  depth: -${f(o.depth)}  feed: ${f(o.feed)}  caster: ${f(o.r)} mm)`);
-  g.push(o.glass === 'page' ? '(Glass: SVG page size)' : `(Glass blank: ${glassName(o.glass, W, H).replace(/×/g,'x')} = ${f(W)} x ${f(H)} mm, front-left corner in the jig)`);
-  g.push('(Z0 = glass surface. X0 Y0 = ' + (o.glass !== 'page' ? 'glass blank front-left corner' : o.origin==='sheet' ? 'sheet front-left corner' : 'drawing front-left') + ')');
-  if (pack) g.push(`(Blank ${pack.k+1} of ${pack.n}: ${pack.count} piece${pack.count===1?'':'s'} packed from the front-left corner)`);
-  if (trimY != null) g.push(`(Score T is the trim line at Y${f(trimY)}. Break it first and keep the ${f1(W)} x ${f1(H - trimY)} mm strip.)`);
+  g.push('(QikGLASS scoring job - made ' + new Date().toISOString().slice(0,10) + ' with the QikGLASS wizard)');
+  g.push(`(Pieces: ${bl.items.map(it => it.u.label).join(', ')})`);
+  g.push(`(Cuts: ${scores.length} incl. ${rn} relief  depth: -${f(o.depth)}  feed: ${f(o.feed)}  wheel offset: ${f(o.r)} mm)`);
+  g.push(`(Glass: ${o.glassName} = ${f(W)} x ${f(H)} mm, front-left corner in the jig. Sheet ${k+1} of ${nb})`);
+  g.push('(Z0 = glass surface. X0 Y0 = front-left corner of the glass)');
+  if (trimY != null) g.push(`(Cut T is the leftover line at Y${f(trimY)}. Break it first and keep the ${f1(W)} x ${f1(H - trimY)} mm strip.)`);
   g.push('G21 G90 G94 G17', 'M5', `G0 Z${f(o.travel)}`);
   let travelDist = 0, last = [0,0], padLen = 0;
   const go = (x,y) => { travelDist += dist(last,[x,y]); last = [x,y]; g.push(`G0 X${f(x)} Y${f(y)}`); };
   const down = () => { g.push('G0 Z0.5', `G1 Z${f(-o.depth)} F${f(o.plunge)}`); };
   const up = () => g.push(`G0 Z${f(o.travel)}`);
-  scores.forEach((s, k) => {
-    g.push(`(${s.trim ? 'Trim line T' : s.relief ? 'Relief ' + s.tag : 'Score ' + s.tag}${s.closed?' - closed loop':''}, ${f(s.len)} mm)`);
-    if (o.oil && k > 0 && k % o.oil === 0) g.push('M0 (Re-oil the wheel, then press cycle start)');
+  scores.forEach((s, i) => {
+    g.push(`(${s.trim ? 'Leftover line T' : s.relief ? 'Relief ' + s.tag : 'Cut ' + s.tag + (s.label ? ' - ' + s.label : '')}${s.closed?' - closed loop':''}, ${f(s.len)} mm)`);
+    if (o.oil && i > 0 && i % o.oil === 0) g.push('M0 (Re-oil the wheel, then press cycle start)');
     if (o.align === 'pad' && o.r > 0 && o.stroke > 0){
       const h = o.stroke/2, t = s.t0;
       const a = [o.padx - t[0]*h + o.r*t[0], o.pady - t[1]*h + o.r*t[1]], b = [o.padx + t[0]*h + o.r*t[0], o.pady + t[1]*h + o.r*t[1]];
-      g.push('(align wheel on pad)'); go(a[0], a[1]); down(); g.push(`G1 X${f(b[0])} Y${f(b[1])} F${f(o.feed)}`); last = b; padLen += o.stroke; up();
+      g.push('(line the wheel up on the scrap pad)'); go(a[0], a[1]); down(); g.push(`G1 X${f(b[0])} Y${f(b[1])} F${f(o.feed)}`); last = b; padLen += o.stroke; up();
     }
     go(s.pivot[0][0], s.pivot[0][1]); down();
-    s.pivot.slice(1).forEach((p, i) => g.push(`G1 X${f(p[0])} Y${f(p[1])}` + (i===0 ? ` F${f(o.feed)}` : '')));
+    s.pivot.slice(1).forEach((p, j) => g.push(`G1 X${f(p[0])} Y${f(p[1])}` + (j===0 ? ` F${f(o.feed)}` : '')));
     last = s.pivot[s.pivot.length-1]; up();
   });
   go(0,0); g.push('M2');
@@ -933,190 +891,483 @@ function build(){
   const all = scores.flatMap(s => s.pivot);
   if (o.align === 'pad' && o.r > 0) all.push([o.padx, o.pady]);
   const bb = all.length ? bbox(all) : {x0:0,y0:0,x1:0,y1:0};
-  if (bb.x0 < -0.01 || bb.y0 < -0.01) warns.push('Some moves go below X0 or Y0. That’s fine only if your work zero leaves room on the machine.');
-  if (bb.x1 - Math.min(0,bb.x0) > MACHINE.w || bb.y1 - Math.min(0,bb.y0) > MACHINE.h) warns.push(`The job spans ${f(bb.x1-Math.min(0,bb.x0))} × ${f(bb.y1-Math.min(0,bb.y0))} mm, larger than the 3018's 300 × 180 mm travel. Move the pad or split the sheet.`);
-  if (o.r > 0 && o.align === 'none') warns.push('Pre-align is off. The wheel will point a random way at each touch-down and can skid sideways for the first few millimetres.');
-  if (!scores.length) warns.push('No lines found. Draw score lines as paths or shapes with a stroke.');
-  if (o.feed > MACHINE.maxFeed) warns.push(`Score feed ${f(o.feed)} is above your machine's top speed of ${MACHINE.maxFeed} mm/min ($110 and $111). GRBL will quietly slow it to ${MACHINE.maxFeed}, so the run-time estimate is low.`);
-
+  if (bb.x1 - Math.min(0,bb.x0) > MACHINE.w || bb.y1 - Math.min(0,bb.y0) > MACHINE.h) warns.push(`This job is bigger than the machine can reach (300 × 180 mm).`);
   const scoreLen = scores.reduce((a,s) => a+s.len, 0);
   const mins = (scoreLen + padLen)/Math.min(o.feed, MACHINE.maxFeed) + travelDist/MACHINE.maxFeed + scores.length*(o.align==='pad'?2:1)*((o.travel+o.depth)/o.plunge + 0.02);
-  job = {scores, sheet, o, gcode: g.join('\n') + '\n', bb, warns, scoreLen, mins, reliefs: rn, pack, trimY};
-  render();
+  return {nb, k, scores, sheet, o, gcode: g.join('\n') + '\n', warns, scoreLen, mins, reliefs: rn, trimY, items: bl.items, paths: bl.paths, tooBig: res.tooBig};
 }
 
-// ---------- render ----------
-function render(){
-  $('gcode').value = job.gcode;
-  showLeftover();
-  const st = [
-    [job.scores.length - job.reliefs + (job.reliefs ? ' + ' + job.reliefs + 'R' : ''), job.reliefs ? 'scores + relief' : 'scores'],
-    ...(job.pack ? [[`${job.pack.k+1} / ${job.pack.n}`, 'blank']] : []),
-    ...(job.trimY != null ? [[f1(job.sheet.h - job.trimY) + ' mm', 'leftover strip']] : []),
-    [(job.scoreLen/10).toFixed(1) + ' cm', 'total score length'],
-    ['≈ ' + Math.max(1, Math.round(job.mins)) + ' min', 'run time'],
-    [job.o.glass === 'page' ? f1(job.sheet.w) + ' × ' + f1(job.sheet.h) : glassName(job.o.glass, job.sheet.w, job.sheet.h).replace(/ (in|mm)$/, ''), job.o.glass === 'page' ? 'sheet, mm' : 'glass, ' + (job.o.glass === '6x4' || $('cunit').value === 'in' ? 'in' : 'mm')],
-  ];
-  $('stats').innerHTML = st.map(([b,s]) => `<div class="stat"><b>${b}</b><span>${s}</span></div>`).join('');
-  const w = $('warns'); w.innerHTML = '';
-  if (job.warns.length) job.warns.forEach(t => { const d = document.createElement('div'); d.className = 'warn'; d.textContent = t; w.appendChild(d); });
-  else { const d = document.createElement('div'); d.className = 'okmsg'; d.textContent = 'No crossings, sharp corners or travel problems found.'; w.appendChild(d); }
-  draw();
+// ---------- the wizard ----------
+const EXAMPLE_IN = 5;
+function exampleImage(){
+  const c = document.createElement('canvas'); c.width = 960; c.height = 600;
+  const g = c.getContext('2d');
+  g.fillStyle = '#fff'; g.fillRect(0,0,960,600);
+  g.strokeStyle = '#111'; g.lineWidth = 7; g.lineCap = 'round'; g.lineJoin = 'round';
+  g.strokeRect(20,20,920,560);
+  g.beginPath(); g.arc(300,300,110,0,Math.PI*2); g.stroke();
+  g.beginPath(); g.moveTo(300,190); g.lineTo(300,410); g.stroke();
+  g.beginPath(); g.moveTo(20,170); g.bezierCurveTo(160,110,330,130,420,20); g.stroke();
+  g.beginPath(); g.moveTo(410,300); g.bezierCurveTo(560,300,660,190,940,230); g.stroke();
+  g.beginPath(); g.moveTo(620,580); g.bezierCurveTo(600,470,690,360,745,226); g.stroke();
+  g.beginPath(); g.moveTo(20,450); g.bezierCurveTo(110,430,170,450,222,378); g.stroke();
+  g.beginPath(); g.moveTo(640,20); g.bezierCurveTo(610,110,650,170,702,232); g.stroke();
+  g.beginPath(); g.moveTo(265,405); g.bezierCurveTo(300,470,340,520,330,580); g.stroke();
+  return c;
 }
-function css(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
-function draw(){
-  if (!job) return;
-  const cv = $('cv'); const box = cv.parentElement.clientWidth - 24; if (box <= 0) return;
-  const pts = [[job.sheet.x, job.sheet.y], [job.sheet.x+job.sheet.w, job.sheet.y+job.sheet.h], [0,0], ...job.scores.flatMap(s => s.pivot)];
-  if (job.o.align === 'pad' && job.o.r > 0) pts.push([job.o.padx - 8, job.o.pady - 8], [job.o.padx + 8, job.o.pady + 8]);
-  const b = bbox(pts), pad = 14;
-  const W = b.x1-b.x0 || 1, H = b.y1-b.y0 || 1;
-  const cssW = box, scale = (cssW - 2*pad)/W, cssH = Math.min(Math.max(220, H*scale + 2*pad), 900);
-  const s = Math.min(scale, (cssH-2*pad)/H);
-  const dpr = window.devicePixelRatio || 1;
-  cv.width = Math.round(cssW*dpr); cv.height = Math.round(cssH*dpr); cv.style.height = cssH + 'px';
-  const c = cv.getContext('2d'); c.setTransform(dpr,0,0,dpr,0,0); c.clearRect(0,0,cssW,cssH);
-  const X = x => pad + (x-b.x0)*s + ((cssW-2*pad) - W*s)/2, Y = y => cssH - pad - (y-b.y0)*s;
-  // grid 10 mm
-  c.strokeStyle = css('--grid'); c.lineWidth = 1; c.beginPath();
-  for (let x = Math.ceil(b.x0/10)*10; x <= b.x1; x += 10){ c.moveTo(X(x),Y(b.y0)); c.lineTo(X(x),Y(b.y1)); }
-  for (let y = Math.ceil(b.y0/10)*10; y <= b.y1; y += 10){ c.moveTo(X(b.x0),Y(y)); c.lineTo(X(b.x1),Y(y)); }
-  c.stroke();
-  // sheet
-  c.fillStyle = css('--sheet'); c.strokeStyle = css('--line'); c.lineWidth = 1.5;
-  c.fillRect(X(job.sheet.x), Y(job.sheet.y+job.sheet.h), job.sheet.w*s, job.sheet.h*s);
-  c.strokeRect(X(job.sheet.x), Y(job.sheet.y+job.sheet.h), job.sheet.w*s, job.sheet.h*s);
-  if (job.trimY != null){
-    const y0 = job.trimY, y1 = job.sheet.y + job.sheet.h;
-    c.fillStyle = css('--keep'); c.fillRect(X(job.sheet.x), Y(y1), job.sheet.w*s, (y1-y0)*s);
-    c.fillStyle = css('--keep-ink'); c.font = '600 12px ' + css('--body');
-    c.fillText(`Leftover ${f1(job.sheet.w)} × ${f1(y1-y0)} mm: keep for another project`, X(job.sheet.x) + 10, Y((y0+y1)/2) + 4);
-  }
-  if (job.o.glass !== 'page' && job.o.margin > 0){
-    const m = job.o.margin; c.setLineDash([2,4]); c.strokeStyle = css('--margin'); c.lineWidth = 1;
-    c.strokeRect(X(job.sheet.x+m), Y(job.sheet.y+job.sheet.h-m), (job.sheet.w-2*m)*s, (job.sheet.h-2*m)*s); c.setLineDash([]);
-  }
-  // origin
-  c.strokeStyle = css('--ink'); c.lineWidth = 1.5; c.beginPath(); c.moveTo(X(0),Y(0)); c.lineTo(X(0)+18,Y(0)); c.moveTo(X(0),Y(0)); c.lineTo(X(0),Y(0)-18); c.stroke();
-  c.fillStyle = css('--muted'); c.font = '11px ' + css('--mono'); c.fillText('X0 Y0', X(0)+4, Y(0)-6);
-  // pad
-  if (job.o.align === 'pad' && job.o.r > 0){
-    c.setLineDash([3,3]); c.strokeStyle = css('--muted'); c.strokeRect(X(job.o.padx-8), Y(job.o.pady+8), 16*s, 16*s); c.setLineDash([]);
-    c.fillText('pad', X(job.o.padx-8), Y(job.o.pady+8)-4);
-  }
-  const line = (p, col, w, dash) => { c.strokeStyle = col; c.lineWidth = w; c.setLineDash(dash||[]); c.beginPath(); p.forEach((q,i) => i ? c.lineTo(X(q[0]),Y(q[1])) : c.moveTo(X(q[0]),Y(q[1]))); c.stroke(); c.setLineDash([]); };
-  job.scores.forEach(sc => { line(sc.pivot, css('--cobalt'), 1, [4,3]); line(sc.contact, css(sc.trim ? '--keep-ink' : sc.relief ? '--relief' : '--accent'), sc.relief ? 1.8 : 2.5); });
-  c.font = '600 12px ' + css('--mono');
-  job.scores.forEach(sc => {
-    const p = sc.contact[0], col = css(sc.trim ? '--keep-ink' : sc.relief ? '--relief' : '--amber'); c.fillStyle = col;
-    c.beginPath(); c.arc(X(p[0]), Y(p[1]), sc.relief ? 3 : 4, 0, Math.PI*2); c.fill();
-    const lab = sc.tag, tw = c.measureText(lab).width;
-    c.fillStyle = css('--surface'); c.fillRect(X(p[0])+6, Y(p[1])-16, tw+8, 16);
-    c.fillStyle = col; c.fillText(lab, X(p[0])+10, Y(p[1])-4);
+
+// saved choices
+const PREF_KEY = 'qg-wizard';
+const P = Object.assign({depth:0.2, speed:600, relief:true, trim:true, caster:1.5, gapmm:6, margin:5, travel:3, density:'normal', turn:'yes', align:'none', oil:0, unit:'in', cunit:'in', cw:5, ch:3, glass:'6x4'},
+  (() => { try { return JSON.parse(localStorage.getItem(PREF_KEY) || '{}'); } catch(e){ return {}; } })());
+function savePrefs(){ try { localStorage.setItem(PREF_KEY, JSON.stringify(P)); } catch(e){} }
+
+// picture state
+const S = {
+  step: 1, maxStep: 1,
+  kind: null,           // 'raster' (traced) or 'vector' (closed SVG shapes)
+  name: 'pattern',
+  canvas: null, pad: 0, cw: 0, ch: 0,   // raster: source canvas, padding and content size in px
+  baseW: 0, baseH: 0, vec: [],          // vector: page size and pieces at 100 %
+  outlines: [],          // raster: traced outlines in px
+  widthMm: 190.5,        // how wide the whole picture is
+  pieces: [],            // [{pts, area, bb, name, fits}]
+  picked: new Set(),
+  sheet: 0, job: null, note: ''
+};
+const inch = v => v/25.4;
+const fmtLen = (mm, u) => u === 'in' ? `${+inch(mm).toFixed(2)} in` : `${f1(mm)} mm`;
+
+// ---------- step navigation ----------
+function go(n){
+  if (n > S.maxStep + 1 || !canEnter(n)) return;
+  S.step = n; S.maxStep = Math.max(S.maxStep, n);
+  [1,2,3,4].forEach(i => $('s'+i).hidden = i !== n);
+  updateStepper();
+  if (n === 2) drawPick();
+  if (n === 1 && S.kind) drawTrace();
+  if (n === 3) syncGlass();
+  if (n === 4) makeJob();
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+function updateStepper(){
+  const n = S.step;
+  document.querySelectorAll('#steps li').forEach((li, i) => {
+    const k = i+1, b = li.querySelector('button'), ok = k <= S.maxStep && canEnter(k);
+    li.dataset.state = k === n ? 'now' : ok ? 'done' : '';
+    b.disabled = !ok || k === n;
+    if (k === n) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current');
   });
 }
+function canEnter(k){ return k === 1 || (k === 2 && S.pieces.length > 0) || (k === 3 && S.picked.size > 0) || (k === 4 && S.picked.size > 0); }
+document.querySelectorAll('#steps button').forEach(b => b.addEventListener('click', () => go(+b.dataset.go)));
+document.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click', () => go(+b.dataset.back)));
+$('to2').addEventListener('click', () => go(2));
+$('to3').addEventListener('click', () => go(3));
+$('to4').addEventListener('click', () => go(4));
+$('restart').addEventListener('click', () => { S.maxStep = 1; S.picked.clear(); go(1); $('file').value = ''; $('file').click(); });
 
-// ---------- loading ----------
-function load(text, name){
-  try {
-    src = parseSVG(text);
-    $('blank').innerHTML = '<option value="0">1 of 1</option>';
-    fileBase = (name || 'glass-scores').replace(/\.svg$/i,'').replace(/[^\w.-]+/g,'-') || 'glass-scores';
-    $('fname').textContent = name ? `${name} · ${src.paths.length} line${src.paths.length===1?'':'s'}` : 'Sample: 2 pieces on a 6 × 4 in blank';
-    setPadDefault();
-    build();
-  } catch(e){
-    $('warns').innerHTML = ''; const d = document.createElement('div'); d.className = 'warn'; d.textContent = e.message; $('warns').appendChild(d);
-  }
-}
-function readFile(file){ if (!file) return; const r = new FileReader(); r.onload = () => load(r.result, file.name); r.readAsText(file); }
-$('file').addEventListener('change', e => readFile(e.target.files[0]));
+// ---------- step 1: load and trace ----------
+function msg(el, text, kind){ $(el).innerHTML = text ? `<div class="note ${kind||'info'}"></div>` : ''; if (text) $(el).firstChild.textContent = text; }
 const drop = $('drop');
 ['dragenter','dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
 ['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
-drop.addEventListener('drop', e => readFile(e.dataTransfer.files[0]));
-$('sampleBtn').addEventListener('click', () => { load(SAMPLE, null); });
-function glassSize(){ const g = $('glass').value; return g === 'page' ? (src ? [src.sheet.w*num('scale')/100, src.sheet.h*num('scale')/100] : [200,150]) : glassWH(g); }
-// the pad lives on the jig, so its position only changes when there is no jig (SVG page mode)
-function setPadDefault(){ if ($('glass').value === 'page'){ $('padx').value = +(glassSize()[0] + 27).toFixed(1); $('pady').value = 20; } else { $('padx').value = 179.4; $('pady').value = 10; } }
-function syncGlassUI(){ $('customRow').hidden = $('glass').value !== 'custom'; }
-$('glass').addEventListener('change', () => { syncGlassUI(); setPadDefault(); build(); });
-$('cunit').addEventListener('change', () => {
-  const k = $('cunit').value === 'in' ? 1/25.4 : 25.4, dp = $('cunit').value === 'in' ? 2 : 1;
-  ['cw','ch'].forEach(id => $(id).value = +(num(id)*k).toFixed(dp)); build();
+drop.addEventListener('drop', e => openFile(e.dataTransfer.files[0]));
+$('file').addEventListener('change', e => openFile(e.target.files[0]));
+$('exampleBtn').addEventListener('click', () => {
+  S.name = 'example'; S.note = '';
+  useRaster(exampleImage(), 0, EXAMPLE_IN*25.4, true);
+  $('fname').textContent = 'The example pattern';
 });
-function showLeftover(){
-  let lo = null; try { lo = JSON.parse(localStorage.getItem('qg-leftover') || 'null'); } catch(e){}
-  if (job && job.trimY != null) lo = [job.sheet.w, job.sheet.h - job.trimY];
-  $('leftoverBox').hidden = !lo;
-  if (lo){ $('leftoverTxt').textContent = `Leftover ${job && job.trimY != null ? 'from this job' : 'from your last job'}: ${+(lo[0]/25.4).toFixed(2)} × ${+(lo[1]/25.4).toFixed(2)} in`; $('useLeftover').dataset.w = lo[0]; $('useLeftover').dataset.h = lo[1]; }
-}
-$('useLeftover').addEventListener('click', e => {
-  const w = +e.currentTarget.dataset.w, hh = +e.currentTarget.dataset.h, inch = $('cunit').value === 'in';
-  $('glass').value = 'custom'; syncGlassUI(); setPadDefault();
-  $('cw').value = inch ? +(w/25.4).toFixed(2) : +w.toFixed(1); $('ch').value = inch ? +(hh/25.4).toFixed(2) : +hh.toFixed(1);
-  try { localStorage.removeItem('qg-leftover'); } catch(err){}
-  build();
-  $('status').textContent = 'Glass set to the leftover strip. Load the next pattern, push the strip into the jig corner, and zero Z on it.';
-});
-$('blank').addEventListener('change', build);
-$('fitBtn').addEventListener('click', () => {
-  if (!src || !src.paths.length) return;
-  const g = $('glass').value; if (g === 'page') return;
-  const [W, H] = glassWH(g), m = Math.max(0, num('margin'));
-  const b = bbox(rotPts(src.paths.flatMap(p => p.pts), $('rot').value === '90'));
-  const k = Math.min((W-2*m)/(b.x1-b.x0 || 1), (H-2*m)/(b.y1-b.y0 || 1));
-  $('scale').value = Math.floor(k*100); build();
-});
-let tmr; document.querySelectorAll('.controls input:not([type=file]), .controls select').forEach(el => el.addEventListener('input', () => { clearTimeout(tmr); tmr = setTimeout(build, 120); }));
-let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(draw, 100); });
-if (window.matchMedia) matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', draw);
-new MutationObserver(draw).observe(document.documentElement, {attributes:true, attributeFilter:['data-theme']});
 
-// ---------- copy / save ----------
-$('copyBtn').addEventListener('click', () => {
-  const done = () => { $('status').textContent = 'G-code copied.'; rememberLeftover(); };
-  const fallback = () => { const t = $('gcode'); t.focus(); t.select(); $('status').textContent = 'Text selected. Press Ctrl+C (⌘C) to copy.'; };
-  try { navigator.clipboard.writeText(job.gcode).then(done, fallback); } catch(e){ fallback(); }
-});
-function rememberLeftover(){ if (job && job.trimY != null) try { localStorage.setItem('qg-leftover', JSON.stringify([job.sheet.w, job.sheet.h - job.trimY])); } catch(e){} }
-let downloads = null, ext = '.txt';
-if (window.claude && claude.use) claude.use('downloads').then(d => { downloads = d; $('saveBtn').hidden = !d; }).catch(() => {});
-else {
-  // Standalone page (GitHub Pages or opened from disk): plain browser download, real .nc file
-  ext = '.nc';
-  downloads = { save: async ({filename, data}) => {
-    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([data], {type:'text/plain'}));
-    a.download = filename; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-    return {status:'saved'};
-  }};
-  $('saveBtn').hidden = false;
-  $('status').textContent = 'Saves an .nc file for the offline controller\'s SD card.';
-}
-$('saveBtn').addEventListener('click', async () => {
-  if (!downloads || !job) return;
-  try {
-    const suffix = job.pack && job.pack.n > 1 ? `-blank${job.pack.k+1}` : '';
-    await downloads.save({filename: fileBase + suffix + '-score' + ext, data: job.gcode});
-    rememberLeftover();
-    $('status').textContent = ext === '.nc' ? `Saved ${fileBase}${suffix}-score.nc.` : `Saved ${fileBase}-score.txt. Rename it to .nc if your offline controller doesn't list .txt files.`;
-  } catch(e){
-    $('status').textContent = e && e.code === 'declined' ? 'Save cancelled.' : 'Saving isn’t available here. Use Copy and paste into a text file instead.';
+function pngDpi(buf){
+  const b = new Uint8Array(buf); if (b[0] !== 0x89 || b[1] !== 0x50) return null;
+  let i = 8; const dv = new DataView(buf);
+  while (i + 8 < b.length){
+    const len = dv.getUint32(i), type = String.fromCharCode(b[i+4],b[i+5],b[i+6],b[i+7]);
+    if (type === 'pHYs'){ const ppu = dv.getUint32(i+8), unitB = b[i+16]; return unitB === 1 ? Math.round(ppu*0.0254) : null; }
+    if (type === 'IDAT') return null;
+    i += 12 + len;
   }
+  return null;
+}
+function openFile(file){
+  if (!file) return;
+  msg('s1msg', '');
+  S.name = (file.name || 'pattern').replace(/\.[a-z0-9]+$/i, '').replace(/[^\w.-]+/g, '-') || 'pattern';
+  const isSvg = /svg/i.test(file.type) || /\.svg$/i.test(file.name);
+  if (!isSvg && !/^image\//.test(file.type)) return msg('s1msg', 'That isn’t a picture. Choose a PNG, JPG or SVG file.', 'warn');
+  const r = new FileReader();
+  if (isSvg){
+    r.onload = () => { try { openSvg(r.result); $('fname').textContent = file.name; } catch(e){ msg('s1msg', e.message || 'That SVG couldn’t be read.', 'warn'); } };
+    r.readAsText(file);
+    return;
+  }
+  r.onload = () => {
+    const dpi = pngDpi(r.result);
+    const url = URL.createObjectURL(new Blob([r.result], {type: file.type}));
+    const im = new Image();
+    im.onload = () => {
+      const maxSide = 1600, k = Math.min(1, maxSide/Math.max(im.width, im.height));
+      const c = document.createElement('canvas'); c.width = Math.round(im.width*k); c.height = Math.round(im.height*k);
+      const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(im, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      S.note = '';
+      useRaster(c, 0, im.width/(dpi && dpi > 30 ? dpi : 96)*25.4, true);
+      $('fname').textContent = `${file.name} · ${im.width} × ${im.height} px`;
+    };
+    im.onerror = () => msg('s1msg', 'That picture couldn’t be opened. Try saving it as a PNG.', 'warn');
+    im.src = url;
+  };
+  r.readAsArrayBuffer(file);
+}
+function openSvg(text){
+  const src = parseSVG(text);
+  if (!src.paths.length) throw new Error('No lines found in that SVG. Lines need a stroke, or shapes need an outline.');
+  const isClosed = p => p.length > 3 && dist(p[0], p[p.length-1]) < 0.05;
+  let {w, h} = src.sheet;
+  const all = src.paths.flatMap(p => p.pts), b = bbox(all);
+  let x0 = 0, y0 = 0;
+  if (!(w > 0 && h > 0) || b.x0 < -1 || b.y0 < -1 || b.x1 > w+1 || b.y1 > h+1){ x0 = b.x0 - 2; y0 = b.y0 - 2; w = b.x1 - b.x0 + 4; h = b.y1 - b.y0 + 4; }
+  const open = src.paths.filter(p => !isClosed(p.pts));
+  if (!open.length){
+    // every shape is already closed: use them as they are
+    S.kind = 'vector'; S.canvas = null; S.baseW = w; S.baseH = h;
+    S.vec = src.paths.map(p => p.pts.map(([x, y]) => [x - x0, y - y0]));
+    S.note = '';
+    setWidth(w, true);
+    return;
+  }
+  // there are loose lines: draw everything and find the shapes between the lines
+  const k = Math.min(8, 1500/Math.max(w, h)), pad = 6;
+  const c = document.createElement('canvas'); c.width = Math.ceil(w*k) + 2*pad; c.height = Math.ceil(h*k) + 2*pad;
+  const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height);
+  g.strokeStyle = '#000'; g.lineWidth = 2; g.lineJoin = 'round'; g.lineCap = 'round';
+  const X = x => pad + (x - x0)*k, Y = y => pad + (h - (y - y0))*k;
+  for (const p of src.paths){ g.beginPath(); p.pts.forEach(([x, y], i) => i ? g.lineTo(X(x), Y(y)) : g.moveTo(X(x), Y(y))); g.stroke(); }
+  // lines that stop at the page edge close their pieces against the edge
+  const touchesEdge = open.some(p => [p.pts[0], p.pts[p.pts.length-1]].some(([x, y]) => x - x0 < 1 || y - y0 < 1 || x0 + w - x < 1 || y0 + h - y < 1));
+  if (touchesEdge) g.strokeRect(X(x0), Y(y0 + h), w*k, h*k);
+  S.note = 'Your drawing has loose lines, so QikGLASS found the shapes between them.';
+  useRaster(c, pad, w, false, {thr:128, gap:1, smooth:2});
+}
+function useRaster(canvas, pad, widthMm, autoThr, preset){
+  S.kind = 'raster'; S.canvas = canvas; S.pad = pad; S.cw = canvas.width - 2*pad; S.ch = canvas.height - 2*pad;
+  Tracer.load(canvas);
+  const t = preset || {thr: autoThr ? Math.min(200, Math.max(40, Tracer.otsu())) : 128, gap:1, smooth:2};
+  $('thr').value = t.thr; $('gap').value = t.gap; $('smooth').value = t.smooth;
+  syncSliders();
+  setWidth(widthMm, true);
+}
+function setWidth(mm, fresh){
+  S.widthMm = Math.max(5, mm);
+  $('pw').value = P.unit === 'in' ? +inch(S.widthMm).toFixed(2) : +S.widthMm.toFixed(1);
+  if (fresh){ S.picked.clear(); S.maxStep = 1; }
+  retrace();
+}
+let traceTimer;
+function retrace(){
+  if (!S.kind) return;
+  $('loaded').hidden = false;
+  if (S.kind === 'raster'){
+    $('busy').hidden = false; $('traceMore').hidden = false;
+    clearTimeout(traceTimer);
+    traceTimer = setTimeout(() => {
+      const mmPerPx = S.widthMm / S.cw;
+      S.outlines = Tracer.trace({thr:+$('thr').value, gap:+$('gap').value, smooth:+$('smooth').value, minPx: Math.max(4, (+$('minA').value)/(mmPerPx*mmPerPx))});
+      $('busy').hidden = true;
+      makePieces();
+    }, 30);
+  } else { $('traceMore').hidden = true; makePieces(); }
+}
+function picH(){ return S.kind === 'raster' ? S.widthMm*S.ch/S.cw : S.widthMm*S.baseH/S.baseW; }
+function makePieces(){
+  const H = picH(); let list;
+  if (S.kind === 'raster'){
+    const k = S.widthMm / S.cw;
+    list = S.outlines.map(poly => { const q = poly.map(([x, y]) => [(x - S.pad)*k, H - (y - S.pad)*k]); q.push(q[0].slice()); return q; });
+  } else {
+    const k = S.widthMm / S.baseW;
+    list = S.vec.map(p => p.map(([x, y]) => [x*k, y*k]));
+  }
+  const prev = S.pieces;
+  S.pieces = list.map(pts => { const b = bbox(pts); return {pts, bb:b, area:Math.abs(signedArea(pts)), cx:(b.x0+b.x1)/2, cy:(b.y0+b.y1)/2}; })
+    .filter(p => p.area > 0.5)
+    .sort((a, b) => (Math.round((H - a.cy)/12) - Math.round((H - b.cy)/12)) || (a.cx - b.cx));   // top to bottom, left to right
+  S.pieces.forEach((p, i) => p.name = `Piece ${i+1}`);
+  // keep the picks if only the size changed
+  if (prev.length !== S.pieces.length) S.picked.clear();
+  updateFits();
+  const n = S.pieces.length;
+  $('found').innerHTML = n ? `We found <span class="num">${n}</span> piece${n===1?'':'s'}!` : 'No pieces found yet';
+  $('to2').disabled = !n;
+  if (!n) msg('s1msg', S.kind === 'raster' ? 'No closed shapes found. Open “Pieces look wrong?” and move Line darkness, or raise Close gaps if lines have breaks.' : 'No closed shapes found in that SVG.', 'warn');
+  else if (S.note) msg('s1msg', S.note, 'info');
+  else msg('s1msg', '');
+  $('pwHint').textContent = `That makes it ${fmtLen(picH(), P.unit)} tall. Make it bigger or smaller here; the pieces grow or shrink with it.`;
+  drawTrace();
+  updateStepper();
+}
+
+// ---------- glass and fitting ----------
+function leftover(){ try { const v = JSON.parse(localStorage.getItem('qg-leftover') || 'null'); return Array.isArray(v) && v[0] > 10 && v[1] > 10 ? v : null; } catch(e){ return null; } }
+function glass(){
+  if (P.glass === 'left' && leftover()){ const [w, h] = leftover(); return {W:w, H:h, name:`leftover strip ${+inch(w).toFixed(2)} x ${+inch(h).toFixed(2)} in`}; }
+  if (P.glass === 'custom'){ const k = P.cunit === 'in' ? 25.4 : 1; const w = Math.max(12.7, P.cw*k), h = Math.max(12.7, P.ch*k); return {W:w, H:h, name: P.cunit === 'in' ? `${+P.cw} x ${+P.ch} in` : `${f1(w)} x ${f1(h)} mm`}; }
+  return {W:152.4, H:101.6, name:'6 x 4 in'};
+}
+function updateFits(){
+  const {W, H} = glass(), m = P.margin, iw = W - 2*m, ih = H - 2*m, turn = P.turn === 'yes';
+  S.pieces.forEach(p => { const w = p.bb.x1 - p.bb.x0, h = p.bb.y1 - p.bb.y0; p.fits = (w <= iw && h <= ih) || (turn && h <= iw && w <= ih); });
+  [...S.picked].forEach(i => { if (!S.pieces[i] || !S.pieces[i].fits) S.picked.delete(i); });
+}
+function opts(){
+  const gl = glass();
+  return {W:gl.W, H:gl.H, glassName:gl.name, depth:P.depth, travel:Math.max(0.5, +P.travel || 3), feed:+P.speed || 600, plunge:150,
+    r:Math.max(0, +P.caster || 0), align:P.align, padx:179.4, pady:10, stroke:8, inset:1, leadout:0, oil:Math.max(0, Math.floor(+P.oil || 0)),
+    margin:Math.max(0, +P.margin), relief:P.relief, dens:DENSITY[P.density] || DENSITY.normal, split:true, gap:Math.max(2, +P.gapmm || 6), turn:P.turn === 'yes', trim:P.trim};
+}
+function pickedPieces(){ return [...S.picked].sort((a, b) => a - b).map(i => S.pieces[i]); }
+
+// ---------- drawing ----------
+function css(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+function setupCanvas(cv, wMm, hMm, maxH){
+  const cssW = cv.parentElement.clientWidth - 20; if (cssW <= 0) return null;
+  const pad = 8, s = Math.min((cssW - 2*pad)/wMm, (maxH - 2*pad)/hMm), cssH = hMm*s + 2*pad;
+  const dpr = window.devicePixelRatio || 1;
+  cv.width = Math.round(cssW*dpr); cv.height = Math.round(cssH*dpr); cv.style.height = cssH + 'px';
+  const c = cv.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, cssW, cssH);
+  const ox = (cssW - wMm*s)/2;
+  return {c, s, X: x => ox + x*s, Y: y => pad + (hMm - y)*s, cssW, cssH, inv: (px, py) => [(px - ox)/s, hMm - (py - pad)/s]};
+}
+function polyPath(c, T, pts){ c.beginPath(); pts.forEach(([x, y], i) => i ? c.lineTo(T.X(x), T.Y(y)) : c.moveTo(T.X(x), T.Y(y))); c.closePath(); }
+function drawPieces(cv, maxH, mode){
+  const W = S.widthMm, H = picH();
+  const T = setupCanvas(cv, W, H, maxH); if (!T) return null;
+  const c = T.c;
+  c.fillStyle = '#fff'; c.fillRect(T.X(0), T.Y(H), W*T.s, H*T.s);
+  if (S.kind === 'raster'){
+    c.globalAlpha = mode === 'pick' ? 0.35 : 0.9;
+    c.drawImage(S.canvas, S.pad, S.pad, S.cw, S.ch, T.X(0), T.Y(H), W*T.s, H*T.s);
+    c.globalAlpha = 1;
+  }
+  const fs = Math.max(11, Math.min(18, T.s*6));
+  S.pieces.forEach((p, i) => {
+    const on = S.picked.has(i);
+    polyPath(c, T, p.pts);
+    if (!p.fits){ c.fillStyle = css('--big-fill'); c.fill(); c.setLineDash([5, 4]); c.strokeStyle = css('--big'); c.lineWidth = 2; c.stroke(); c.setLineDash([]); }
+    else if (on){ c.fillStyle = css('--pick-fill'); c.fill(); c.strokeStyle = css('--pick'); c.lineWidth = 3; c.stroke(); }
+    else { c.fillStyle = css('--piece-fill'); c.fill(); c.strokeStyle = css('--piece'); c.lineWidth = 1.5; c.stroke(); }
+  });
+  c.font = `700 ${fs}px ${css('--display')}`; c.textAlign = 'center'; c.textBaseline = 'middle';
+  S.pieces.forEach((p, i) => {
+    const [x, y] = labelPoint(p), on = S.picked.has(i), r = fs*0.85;
+    c.fillStyle = !p.fits ? css('--big') : on ? css('--pick') : css('--surface');
+    c.beginPath(); c.arc(T.X(x), T.Y(y), r, 0, Math.PI*2); c.fill();
+    c.lineWidth = 1.5; c.strokeStyle = !p.fits ? css('--big') : on ? css('--pick') : css('--piece'); c.stroke();
+    c.fillStyle = !p.fits || on ? '#fff' : css('--piece'); c.fillText(String(i+1), T.X(x), T.Y(y) + 1);
+  });
+  c.textAlign = 'start'; c.textBaseline = 'alphabetic';
+  return T;
+}
+// a point well inside the piece for its number (centre of the widest horizontal run through the middle rows)
+function labelPoint(p){
+  if (p._lp) return p._lp;
+  const b = p.bb; let best = null, bw = -1;
+  for (let k = 1; k <= 9; k++){
+    const y = b.y0 + (b.y1 - b.y0)*k/10, xs = [];
+    for (let i = 1; i < p.pts.length; i++){ const a = p.pts[i-1], c = p.pts[i]; if ((a[1] > y) !== (c[1] > y)) xs.push(a[0] + (y - a[1])*(c[0] - a[0])/(c[1] - a[1])); }
+    xs.sort((m, n) => m - n);
+    for (let i = 0; i + 1 < xs.length; i += 2){ const w = (xs[i+1] - xs[i]) * (1 - Math.abs(k - 5)/12); if (w > bw){ bw = w; best = [(xs[i] + xs[i+1])/2, y]; } }
+  }
+  return p._lp = best || [p.cx, p.cy];
+}
+let traceT = null, pickT = null;
+function drawTrace(){ if (!$('s1').hidden && S.kind) traceT = drawPieces($('traceCv'), 420, 'trace'); }
+function drawPick(){
+  if ($('s2').hidden) return;
+  pickT = drawPieces($('pickCv'), Math.max(320, window.innerHeight*0.62), 'pick');
+  const n = S.picked.size, {W, H} = glass();
+  $('pickCount').textContent = `${n} picked`;
+  $('to3').disabled = !n;
+  const big = S.pieces.filter(p => !p.fits).length;
+  let t = '', kind = 'info';
+  if (n){
+    const sheets = packPieces(pickedPieces().map(p => p.pts), W, H, opts()).blanks.length;
+    t = `${n} piece${n===1?'':'s'} picked. ${sheets === 1 ? 'They all fit on 1 piece' : `You'll need ${sheets} pieces`} of ${glass().name.replace(/ x /g, ' × ')} glass. ✓`;
+    kind = 'ok';
+  } else t = 'Nothing picked yet. Tap a piece, or press “Pick all that fit”.';
+  if (big) t += ` ${big} piece${big===1?' is':'s are'} red because ${big===1?'it is':'they are'} too big for this glass. Go back to step 1 and make the picture smaller, or choose bigger glass in step 3.`;
+  msg('s2msg', t, big && !n ? 'warn' : kind);
+}
+function pointIn(pt, poly){
+  let c = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++){
+    const a = poly[i], b = poly[j];
+    if ((a[1] > pt[1]) !== (b[1] > pt[1]) && pt[0] < (b[0] - a[0])*(pt[1] - a[1])/(b[1] - a[1]) + a[0]) c = !c;
+  }
+  return c;
+}
+$('pickCv').addEventListener('click', e => {
+  if (!pickT) return;
+  const r = e.currentTarget.getBoundingClientRect(), pt = pickT.inv(e.clientX - r.left, e.clientY - r.top);
+  let hit = -1, area = Infinity;
+  S.pieces.forEach((p, i) => { if (p.area < area && pointIn(pt, p.pts)){ hit = i; area = p.area; } });
+  if (hit < 0) return;
+  if (!S.pieces[hit].fits){ msg('s2msg', `${S.pieces[hit].name} is too big for this glass (${fmtLen(S.pieces[hit].bb.x1 - S.pieces[hit].bb.x0, P.unit)} × ${fmtLen(S.pieces[hit].bb.y1 - S.pieces[hit].bb.y0, P.unit)}). Make the picture smaller in step 1.`, 'warn'); return; }
+  S.picked.has(hit) ? S.picked.delete(hit) : S.picked.add(hit);
+  drawPick(); updateStepper();
+});
+$('pickAll').addEventListener('click', () => { S.pieces.forEach((p, i) => { if (p.fits) S.picked.add(i); }); drawPick(); updateStepper(); });
+$('pickNone').addEventListener('click', () => { S.picked.clear(); drawPick(); updateStepper(); });
+
+// ---------- step 1 controls ----------
+function syncSliders(){
+  $('thrV').textContent = $('thr').value; $('gapV').textContent = $('gap').value; $('smoothV').textContent = $('smooth').value; $('minAV').textContent = $('minA').value + ' mm²';
+}
+['thr','gap','smooth','minA'].forEach(id => $(id).addEventListener('input', () => { syncSliders(); retrace(); }));
+$('pw').addEventListener('input', () => {
+  const v = parseFloat($('pw').value); if (!(v > 0)) return;
+  S.widthMm = Math.max(5, P.unit === 'in' ? v*25.4 : v);
+  clearTimeout(traceTimer); traceTimer = setTimeout(retrace, 250);
+});
+function segSet(sel, attr, val){ document.querySelectorAll(sel).forEach(b => b.setAttribute('aria-pressed', String(b.dataset[attr] === String(val)))); }
+document.querySelectorAll('[data-unit]').forEach(b => b.addEventListener('click', () => {
+  P.unit = b.dataset.unit; savePrefs(); segSet('[data-unit]', 'unit', P.unit);
+  $('pw').value = P.unit === 'in' ? +inch(S.widthMm).toFixed(2) : +S.widthMm.toFixed(1);
+  if (S.kind) $('pwHint').textContent = `That makes it ${fmtLen(picH(), P.unit)} tall. Make it bigger or smaller here; the pieces grow or shrink with it.`;
+}));
+
+// ---------- step 3 controls ----------
+function syncGlass(){
+  const lo = leftover();
+  $('leftChoice').hidden = !lo;
+  if (lo) $('leftTxt').textContent = `${+inch(lo[0]).toFixed(2)} × ${+inch(lo[1]).toFixed(2)} in, saved from your last job.`;
+  if (P.glass === 'left' && !lo) P.glass = '6x4';
+  segSet('[data-glass]', 'glass', P.glass);
+  $('customRow').hidden = P.glass !== 'custom';
+  segSet('[data-cunit]', 'cunit', P.cunit);
+  $('cw').value = P.cw; $('ch').value = P.ch;
+  updateFits();
+}
+document.querySelectorAll('[data-glass]').forEach(b => b.addEventListener('click', () => { P.glass = b.dataset.glass; savePrefs(); syncGlass(); }));
+document.querySelectorAll('[data-cunit]').forEach(b => b.addEventListener('click', () => {
+  if (P.cunit === b.dataset.cunit) return;
+  const k = b.dataset.cunit === 'in' ? 1/25.4 : 25.4, dp = b.dataset.cunit === 'in' ? 2 : 1;
+  P.cw = +(P.cw*k).toFixed(dp); P.ch = +(P.ch*k).toFixed(dp); P.cunit = b.dataset.cunit; savePrefs(); syncGlass();
+}));
+['cw','ch'].forEach(id => $(id).addEventListener('input', () => { const v = parseFloat($(id).value); if (v > 0){ P[id] = v; savePrefs(); updateFits(); } }));
+function depthWords(d){ return d <= 0.1 ? 'very light' : d <= 0.2 ? 'light' : d <= 0.3 ? 'medium' : 'firm'; }
+$('depth').addEventListener('input', () => { P.depth = +$('depth').value; $('depthV').textContent = `${P.depth.toFixed(2)} mm · ${depthWords(P.depth)}`; savePrefs(); });
+$('relief').addEventListener('change', () => { P.relief = $('relief').checked; savePrefs(); });
+$('trim').addEventListener('change', () => { P.trim = $('trim').checked; savePrefs(); });
+document.querySelectorAll('[data-speed]').forEach(b => b.addEventListener('click', () => { P.speed = +b.dataset.speed; savePrefs(); segSet('[data-speed]', 'speed', P.speed); }));
+const NUMS = {caster:'caster', gapmm:'gapmm', margin:'margin', travel:'travel', oil:'oil'};
+Object.keys(NUMS).forEach(id => $(id).addEventListener('input', () => { const v = parseFloat($(id).value); if (isFinite(v) && v >= 0){ P[id] = v; savePrefs(); updateFits(); } }));
+[['density','density'], ['turnSel','turn'], ['alignSel','align']].forEach(([id, key]) => $(id).addEventListener('change', () => { P[key] = $(id).value; savePrefs(); updateFits(); }));
+function syncStep3(){
+  $('depth').value = P.depth; $('depthV').textContent = `${(+P.depth).toFixed(2)} mm · ${depthWords(+P.depth)}`;
+  $('relief').checked = P.relief; $('trim').checked = P.trim; segSet('[data-speed]', 'speed', P.speed);
+  Object.keys(NUMS).forEach(id => $(id).value = P[id]);
+  $('density').value = P.density; $('turnSel').value = P.turn; $('alignSel').value = P.align;
+  segSet('[data-unit]', 'unit', P.unit);
+  syncGlass();
+}
+
+// ---------- step 4: the job ----------
+function makeJob(){
+  updateFits();
+  const list = pickedPieces();
+  if (!list.length){ go(2); return; }
+  S.job = buildJob(list, opts(), S.sheet);
+  if (S.job.nb && S.sheet >= S.job.nb){ S.sheet = 0; S.job = buildJob(list, opts(), 0); }
+  renderJob();
+}
+function renderJob(){
+  const j = S.job, n = j.nb;
+  $('sheetTabs').innerHTML = n > 1 ? Array.from({length:n}, (_, i) => `<button class="btn small${i === j.k ? ' primary' : ''}" data-sheet="${i}" aria-pressed="${i === j.k}">Glass ${i+1}</button>`).join('') : '';
+  $('sheetTabs').querySelectorAll('[data-sheet]').forEach(b => b.addEventListener('click', () => { S.sheet = +b.dataset.sheet; makeJob(); }));
+  const pieces = j.items ? j.items.length : 0;
+  const st = [
+    [pieces, pieces === 1 ? 'piece' : 'pieces'],
+    [j.reliefs || 0, 'relief cuts'],
+    [`≈ ${Math.max(1, Math.round(j.mins || 0))} min`, 'to run'],
+    ...(j.trimY != null ? [[`${+inch(j.sheet.w).toFixed(1)} × ${+inch(j.sheet.h - j.trimY).toFixed(1)} in`, 'strip to keep']] : []),
+    ...(n > 1 ? [[`${j.k+1} of ${n}`, 'glass pieces']] : [])
+  ];
+  $('stats').innerHTML = st.map(([b, s]) => `<div class="stat"><b>${b}</b><span>${s}</span></div>`).join('');
+  const w = $('warns'); w.innerHTML = '';
+  const add = (t, k) => { const d = document.createElement('div'); d.className = 'note ' + k; d.textContent = t; w.appendChild(d); };
+  if (n > 1) add(`Your pieces need ${n} pieces of glass. Save a file for each one: tap Glass 1, Glass 2… above, or press “Save all”.`, 'info');
+  if (j.o.align !== 'pad' && j.o.r > 0) add('Tip: the wheel turns itself to face the right way in the first few millimetres of each cut. If the start of a line looks scratchy, slow the speed down.', 'info');
+  [...new Set(j.warns)].forEach(t => add(t, 'warn'));
+  if (!j.warns.length && n) add('All good! No crossing cuts and everything fits on the glass.', 'ok');
+  $('gcode').textContent = j.gcode || '';
+  $('saveBtn').disabled = !n;
+  $('saveBtn').textContent = n > 1 ? `⬇ Save the file for glass ${j.k+1}` : '⬇ Save the cut file';
+  $('saveAllBtn').hidden = n < 2;
+  $('fnTxt').textContent = n ? fileName(j) : '';
+  drawJob();
+}
+function fileName(j){ return `${S.name}${j.nb > 1 ? `-glass${j.k+1}of${j.nb}` : ''}.nc`; }
+function drawJob(){
+  const j = S.job; if (!j || $('s4').hidden) return;
+  const W = j.sheet.w, H = j.sheet.h;
+  const T = setupCanvas($('jobCv'), W, H, Math.max(300, window.innerHeight*0.6)); if (!T) return;
+  const c = T.c;
+  c.fillStyle = css('--glass'); c.fillRect(T.X(0), T.Y(H), W*T.s, H*T.s);
+  if (j.trimY != null){ c.fillStyle = css('--keep'); c.fillRect(T.X(0), T.Y(H), W*T.s, (H - j.trimY)*T.s); }
+  c.strokeStyle = css('--grid'); c.lineWidth = 1; c.beginPath();
+  for (let x = 10; x < W; x += 10){ c.moveTo(T.X(x), T.Y(0)); c.lineTo(T.X(x), T.Y(H)); }
+  for (let y = 10; y < H; y += 10){ c.moveTo(T.X(0), T.Y(y)); c.lineTo(T.X(W), T.Y(y)); }
+  c.stroke();
+  c.strokeStyle = css('--muted'); c.lineWidth = 1.5; c.strokeRect(T.X(0), T.Y(H), W*T.s, H*T.s);
+  const line = (p, col, wdt) => { c.strokeStyle = col; c.lineWidth = wdt; c.lineJoin = 'round'; c.lineCap = 'round'; c.beginPath(); p.forEach((q, i) => i ? c.lineTo(T.X(q[0]), T.Y(q[1])) : c.moveTo(T.X(q[0]), T.Y(q[1]))); c.stroke(); };
+  (j.scores || []).forEach(s => line(s.contact, css(s.trim ? '--trim' : s.relief ? '--relief' : '--piece'), s.relief ? 1.6 : 3));
+  // piece numbers (same as in step 2)
+  const fs = Math.max(11, Math.min(18, T.s*5));
+  c.font = `700 ${fs}px ${css('--display')}`; c.textAlign = 'center'; c.textBaseline = 'middle';
+  (j.items || []).forEach((it, i) => {
+    const p = j.paths[i], b = bbox(p), lp = labelPoint({pts:p, bb:b, cx:(b.x0+b.x1)/2, cy:(b.y0+b.y1)/2});
+    const num = it.u.label.replace(/^Piece /, '');
+    c.fillStyle = css('--surface'); c.beginPath(); c.arc(T.X(lp[0]), T.Y(lp[1]), fs*0.85, 0, Math.PI*2); c.fill();
+    c.strokeStyle = css('--piece'); c.lineWidth = 1.5; c.stroke();
+    c.fillStyle = css('--piece'); c.fillText(num, T.X(lp[0]), T.Y(lp[1]) + 1);
+  });
+  // the corner that goes in the jig
+  c.textAlign = 'start'; c.textBaseline = 'alphabetic'; c.font = `600 12px ${css('--body')}`;
+  c.fillStyle = css('--pick'); c.beginPath(); c.arc(T.X(0), T.Y(0), 5, 0, Math.PI*2); c.fill();
+  c.fillStyle = css('--ink'); c.fillText('jig corner (X0 Y0)', T.X(0) + 9, T.Y(0) - 7);
+}
+async function saveOne(j){
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([j.gcode], {type:'text/plain'}));
+  a.download = fileName(j); document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  if (j.trimY != null) try { localStorage.setItem('qg-leftover', JSON.stringify([j.sheet.w, j.sheet.h - j.trimY])); } catch(e){}
+}
+$('saveBtn').addEventListener('click', () => {
+  if (!S.job || !S.job.nb) return;
+  saveOne(S.job);
+  $('fnTxt').textContent = `Saved ${fileName(S.job)} ✓  Look in your Downloads folder.`;
+});
+$('saveAllBtn').addEventListener('click', async () => {
+  const list = pickedPieces(), o = opts();
+  for (let k = 0; k < S.job.nb; k++){ saveOne(buildJob(list, o, k)); await new Promise(r => setTimeout(r, 400)); }
+  $('fnTxt').textContent = `Saved ${S.job.nb} files ✓  Look in your Downloads folder.`;
 });
 
-let start = 'gcode'; try { start = localStorage.getItem('qg-tab') || 'gcode'; } catch(e){}
-const hashTab = location.hash.replace('#','');
-if (['gcode','build','run'].includes(hashTab)) start = hashTab;
-// Lines handed over from the Select parts page
-let handoff = null;
-try { handoff = JSON.parse(localStorage.getItem('qikglass-handoff') || 'null'); localStorage.removeItem('qikglass-handoff'); } catch(e){}
-syncGlassUI();
-if (handoff && handoff.svg && Date.now() - (handoff.t||0) < 30*60*1000){
-  load(handoff.svg, handoff.name || 'selection.svg');   // the selected parts from Select parts
-  start = 'gcode';
-} else load(SAMPLE, null);
-showTab(['gcode','build','run'].includes(start) ? start : 'gcode');
+// ---------- redraw on resize / theme ----------
+let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { drawTrace(); drawPick(); drawJob(); }, 120); });
+const redraw = () => { drawTrace(); drawPick(); drawJob(); };
+if (window.matchMedia) matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', redraw);
+new MutationObserver(redraw).observe(document.documentElement, {attributes:true, attributeFilter:['data-theme']});
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(redraw);
+
+syncStep3();
+syncSliders();
+go(1);
+
 })();
 </script>
 </body>

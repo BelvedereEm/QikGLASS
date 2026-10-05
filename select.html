@@ -112,11 +112,12 @@ ol#list .ctl button:hover{background:var(--line); color:var(--ink)}
     <p class="spec">Pick the score lines to cut from a full pattern SVG</p>
   </div>
   <nav aria-label="Pages">
+    <a href="index.html" style="color:var(--accent)">★ Easy mode</a>
     <a href="trace.html">PNG → SVG</a>
     <a href="select.html" aria-current="page">Select parts</a>
-    <a href="index.html#gcode">Pattern → G-code</a>
-    <a href="index.html#build">Build the head</a>
-    <a href="index.html#run">Calibrate &amp; score</a>
+    <a href="advanced.html#gcode">Pattern → G-code</a>
+    <a href="advanced.html#build">Build the head</a>
+    <a href="advanced.html#run">Calibrate &amp; score</a>
   </nav>
 </header>
 
@@ -471,7 +472,7 @@ $('sendBtn').addEventListener('click', () => {
   const payload = {svg: selectionSVG(), name: `${baseName()} (${cutList().length} selected).svg`, sheetW: vb0.w*u, t: Date.now()};
   try { localStorage.setItem('qikglass-handoff', JSON.stringify(payload)); }
   catch(e){ return setStatus('Your browser blocked the hand-off. Use “Download selection as SVG” and open that file on the G-code page instead.', true); }
-  location.href = 'index.html#gcode';
+  location.href = 'advanced.html#gcode';
 });
 $('saveBtn').addEventListener('click', () => {
   const a = document.createElement('a');
